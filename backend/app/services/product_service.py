@@ -1,5 +1,6 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from app.models.sqlalchemy import Product, ProductSize, Category
 from app.schemas.product_schemas import ProductBase, ProductResponse, CategoryResponse, ProductSizeResponse
 from app.db import get_db_session
@@ -8,6 +9,7 @@ from fastapi_pagination import Page, paginate
 from app import app
 import os
 from colorama import Fore
+from datetime import datetime
 
 db = get_db_session()
 def map_product_to_response(db_product: Product) -> ProductResponse:
@@ -24,7 +26,8 @@ def map_product_to_response(db_product: Product) -> ProductResponse:
         image_url=db_product.image_url,
         categories=categories,
         sizes=sizes,
-        sale_price=db_product.sale_price
+        sale_price=db_product.sale_price,
+        created_at=db_product.created_at if hasattr(db_product, 'created_at') and db_product.created_at else datetime.now()
     )
 class Product_Service():
     
@@ -36,14 +39,49 @@ class Product_Service():
         db.refresh(db_product)
         return map_product_to_response(db_product).dict()
 
-    # Get a list of all products
-    def get_products(page: int = 0, limit: int = 10 ) -> List[Dict]:
+    # Get a list of all products with filters
+    def get_products(
+        page: int = 0, 
+        limit: int = 10,
+        category: Optional[str] = None,
+        product_type: Optional[str] = None,
+        min_price: Optional[float] = None,
+        max_price: Optional[float] = None,
+        search: Optional[str] = None
+    ) -> List[Dict]:
         try:
-            products = db.query(Product).offset(page * limit).limit(10).all()
+            query = db.query(Product)
+            
+            # Filter by product_type (e.g., "Tops", "Bottoms", "Shoes")
+            if product_type:
+                query = query.filter(Product.product_type.ilike(f"%{product_type}%"))
+            
+            # Filter by category name
+            if category:
+                query = query.join(Product.categories).filter(Category.name.ilike(f"%{category}%"))
+            
+            # Filter by price range
+            if min_price is not None:
+                query = query.filter(Product.price >= min_price)
+            if max_price is not None:
+                query = query.filter(Product.price <= max_price)
+            
+            # Search by product name or description
+            if search:
+                query = query.filter(
+                    or_(
+                        Product.product_name.ilike(f"%{search}%"),
+                        Product.description.ilike(f"%{search}%"),
+                        Product.blurb.ilike(f"%{search}%")
+                    )
+                )
+            
+            # Pagination
+            products = query.offset(page * limit).limit(limit).all()
             return products
         except Exception as e:
             db.rollback()
-            raise HTTPException(status_code=500, detail="Error fetching products")
+            raise HTTPException(status_code=500, detail=f"Error fetching products: {str(e)}")
     # Get a single product by ID
     def get_product(product_slug: str):
         try:

@@ -17,27 +17,92 @@ export const getProductInfo = async (productID: string) => {
   }
 };
 
-interface IGetProductList {
-  page: Number;
-  limit: Number;
+export interface IProductFilters {
+  page?: number;
+  limit?: number;
+  category?: string;
+  product_type?: string;
+  min_price?: number;
+  max_price?: number;
+  search?: string;
 }
 
-export const getProductList = async ({
-  page,
-  limit,
-}: IGetProductList) => {
+export const getProductList = async (filters: IProductFilters = {}) => {
   try {
-    const response = await fetch(
-      `${BACKEND_URL}/products?page${page}&limit=${limit}`
-    ).then((res) => {
-      if (res.ok) {
-        return res.json();
-      } else {
-        return null;
-      }
-    });
-    return response;
+    const params = new URLSearchParams();
+    
+    if (filters.page !== undefined) params.append("page", filters.page.toString());
+    if (filters.limit !== undefined) params.append("limit", filters.limit.toString());
+    if (filters.category) params.append("category", filters.category);
+    if (filters.product_type) params.append("product_type", filters.product_type);
+    if (filters.min_price !== undefined) params.append("min_price", filters.min_price.toString());
+    if (filters.max_price !== undefined) params.append("max_price", filters.max_price.toString());
+    if (filters.search) params.append("search", filters.search);
+
+    const response = await fetch(`${BACKEND_URL}/products?${params.toString()}`);
+    
+    if (response.ok) {
+      return await response.json();
+    } else {
+      return null;
+    }
   } catch (err) {
-    console.error("Error fetching product information");
+    console.error("Error fetching product list:", err);
+    return null;
+  }
+};
+
+// Upload image to Cloudinary via backend
+export const uploadProductImage = async (file: File) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(`${BACKEND_URL}/upload-image`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (response.ok) {
+      return await response.json();
+    } else {
+      throw new Error("Upload failed");
+    }
+  } catch (err) {
+    console.error("Error uploading image:", err);
+    return null;
+  }
+};
+
+// Create new product
+export interface ICreateProduct {
+  slug: string;
+  product_type: string;
+  product_name: string;
+  price: number;
+  blurb?: string;
+  description?: string;
+  image_url?: string;
+  sale_price?: number;
+}
+
+export const createProduct = async (product: ICreateProduct) => {
+  try {
+    const response = await fetch(`${BACKEND_URL}/products`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(product),
+    });
+
+    if (response.ok) {
+      return await response.json();
+    } else {
+      throw new Error("Create product failed");
+    }
+  } catch (err) {
+    console.error("Error creating product:", err);
+    return null;
   }
 };

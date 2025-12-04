@@ -1,6 +1,6 @@
 from builtins import ValueError, any, bool, str
 from pydantic import BaseModel, EmailStr, Field, validator, root_validator
-from typing import Optional, List
+from typing import Optional, List, Literal
 from datetime import datetime
 from enum import Enum
 import uuid
@@ -31,14 +31,24 @@ class UserUpdate(UserBase):
         return values
     
 class UserResponse(UserBase):
-    id: uuid.UUID = Field(..., example=uuid.uuid4())
+    id: uuid.UUID = Field(..., alias="uuid", example=uuid.uuid4())
     email: EmailStr = Field(..., example="john.doe@example.com")
-    first_name: Optional[str] = Field(None, min_length=3, pattern=r'^[\w-]+$', example="John")    
-    last_name: Optional[str] = Field(None, min_length=3, pattern=r'^[\w-]+$', example="Doe")    
+    first_name: Optional[str] = Field(None, example="John")    
+    last_name: Optional[str] = Field(None, example="Doe")
+    role: str = Field(default="user", example="user")
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
 
 class LoginRequest(BaseModel):
     email: str = Field(..., example="john.doe@example.com")
     password: str = Field(..., example="SecurePassword&*1234")
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
 
 class ErrorResponse(BaseModel):
     error: str = Field(..., example="Not Found")

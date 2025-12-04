@@ -1,10 +1,13 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from app.config import DATABASE as db_info
+from dotenv import load_dotenv
 from colorama import Fore
 
-DATABASE_URL = f"postgresql://{db_info['username']}:{db_info['password']}@{db_info['host']}:{db_info['port']}/{db_info['database']}"
+load_dotenv()
+
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 Base = declarative_base()
 

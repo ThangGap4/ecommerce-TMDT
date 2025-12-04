@@ -10,3 +10,5 @@ python-jose
 passlib
 python-dotenv
 colorama
+cloudinary
+python-multipart

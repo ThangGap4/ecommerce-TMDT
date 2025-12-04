@@ -1,38 +1,37 @@
 import React, { useState } from "react";
-import { Typography, TextField, Button, Box, Container } from "@mui/material";
+import { Typography, TextField, Button, Box, Container, Alert, Link } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import AuthPage from "./AuthPage";
-import qs from "qs";
+import { login } from "../../services/Auth";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { setUser } = useAuth();
 
-  //@ts-ignore
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
-      const credentials = new URLSearchParams();
-      credentials.append("username", email);
-      credentials.append("password", password);
-
-      const response = await fetch("/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: credentials,
-      });
-
-      if (!response.ok) {
-        throw new Error("Login failed");
+      const response = await login({ email, password });
+      setUser(response.user);
+      
+      // Redirect theo role
+      if (response.user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
       }
-
-      const data = await response.json();
-      localStorage.setItem("accessToken", data.access_token);
-      // Handle successful login
-      console.log("Login successful", data);
-    } catch (error) {
-      // Handle login error
-      console.error("Login error", error);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || "Dang nhap that bai");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -80,9 +79,20 @@ export default function Login() {
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
+              disabled={loading}
             >
-              Login
+              {loading ? "Dang xu ly..." : "Dang nhap"}
             </Button>
+            {error && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {error}
+              </Alert>
+            )}
+            <Box sx={{ textAlign: "center", mt: 2 }}>
+              <Link href="/register" underline="hover">
+                Chua co tai khoan? Dang ky ngay
+              </Link>
+            </Box>
           </Box>
         </Box>
       </Container>

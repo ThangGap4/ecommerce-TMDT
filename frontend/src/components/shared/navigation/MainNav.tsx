@@ -3,31 +3,37 @@ import React from "react";
 export default function MainNav() {
   const navLinks = [
     {
-      label: "New Arrivals",
-      href: "/new-arrivals",
+      label: "Trang chu",
+      href: "/",
     },
     {
-      label: "Tops",
-      href: "/tops",
+      label: "San pham",
+      href: "/products",
     },
     {
-      label: "Bottoms",
-      href: "/bottoms",
+      label: "Ao",
+      href: "/products?type=Tops",
     },
     {
-      label: "Shoes",
-      href: "/shoes",
+      label: "Quan",
+      href: "/products?type=Bottoms",
     },
     {
-      label: "Sale",
-      href: "/sale",
+      label: "Giay",
+      href: "/products?type=Shoes",
+    },
+    {
+      label: "Giam gia",
+      href: "/products?sale=true",
     },
   ];
   return (
     <nav id="main-nav">
       <ul>
         {navLinks.map((link) => (
-          <li key={link.label}>{link.label}</li>
+          <li key={link.label}>
+            <a href={link.href}>{link.label}</a>
+          </li>
         ))}
       </ul>
     </nav>

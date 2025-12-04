@@ -5,47 +5,57 @@ import {
   Button,
   Box,
   Container,
+  Alert,
+  Link,
 } from "@mui/material";
-import { BACKEND_URL } from "../../constants";
+import { useNavigate } from "react-router-dom";
 import AuthPage from "./AuthPage";
+import { register } from "../../services/Auth";
 
 export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  //@ts-ignore
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+    setError("");
+    setSuccess("");
+
     if (password !== confirmPassword) {
-      // Handle password mismatch error
-      console.error('Passwords do not match');
+      setError("Mat khau xac nhan khong khop");
       return;
     }
-  
+
+    if (password.length < 6) {
+      setError("Mat khau phai co it nhat 6 ky tu");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const userData = {
+      await register({
         email,
         password,
-      };
-  
-      const response = await fetch(`${BACKEND_URL}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
+        first_name: firstName || undefined,
+        last_name: lastName || undefined,
       });
-  
-      if (!response.ok) {
-        throw new Error('Registration failed');
-      }
-  
-      const data = await response.json();
-      // Handle successful registration
-      console.log('Registration successful', data);
-    } catch (error) {
-      // Handle registration error
-      console.error('Registration error', error);
+      
+      setSuccess("Dang ky thanh cong! Dang chuyen huong...");
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || "Dang ky that bai");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -78,10 +88,28 @@ export default function Register() {
             />
             <TextField
               margin="normal"
+              fullWidth
+              name="firstName"
+              label="Ten"
+              id="firstName"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+            />
+            <TextField
+              margin="normal"
+              fullWidth
+              name="lastName"
+              label="Ho"
+              id="lastName"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+            />
+            <TextField
+              margin="normal"
               required
               fullWidth
               name="password"
-              label="Password"
+              label="Mat khau"
               type="password"
               id="password"
               autoComplete="current-password"
@@ -93,22 +121,37 @@ export default function Register() {
               required
               fullWidth
               name="confirmPassword"
-              label="Confirm Password"
+              label="Xac nhan mat khau"
               type="password"
               id="confirmPassword"
               autoComplete="confirm-password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
+            {error && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {error}
+              </Alert>
+            )}
+            {success && (
+              <Alert severity="success" sx={{ mt: 2 }}>
+                {success}
+              </Alert>
+            )}
             <Button
               type="submit"
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
-              onSubmit={handleSubmit}
+              disabled={loading}
             >
-              Register
+              {loading ? "Dang xu ly..." : "Dang ky"}
             </Button>
+            <Box sx={{ textAlign: "center", mt: 2 }}>
+              <Link href="/login" underline="hover">
+                Da co tai khoan? Dang nhap
+              </Link>
+            </Box>
           </Box>
         </Box>
       </Container>

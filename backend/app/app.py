@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers.product_router import product_router
 from app.routers.cart_router import cart_router
 from app.routers.support_router import support_router
+from app.routers.auth_router import router as auth_router
 
 from app.db import create_tables
 from app.models.sqlalchemy import *
@@ -11,7 +12,7 @@ from app.models.sqlalchemy import *
 from fastapi_pagination import Page, add_pagination, paginate
 
 description = """
-Ecommerce  API 🔥
+Ecommerce  API
 
 You will be able to:
 * **Fetch Products from the Database**
@@ -41,6 +42,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 app.include_router(product_router)
 app.include_router(cart_router)
 app.include_router(support_router)

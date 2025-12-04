@@ -8,7 +8,7 @@ import RadioProduct from "../../components/ui/buttons/RadioProduct/RadioProduct"
 
 import { Typography } from "@mui/material";
 import { TextField, Button } from "@mui/material";
-import { AWS_S3_BASE_URL } from "../../constants";
+import { getImageUrl } from "../../utils/imageUtils";
 
 import { ICartContext, ICartItem } from "../../types/CartTypes";
 import { CartContext } from "../../App";
@@ -43,7 +43,7 @@ export default function ProductPage() {
           <>
             <aside className="w-full max-w-[600px] h-[600px]">
               <figure>
-                <img src={AWS_S3_BASE_URL + productInfo.image_url}></img>
+                <img src={getImageUrl(productInfo.image_url)} alt={productInfo.product_name}></img>
               </figure>
             </aside>
             <section

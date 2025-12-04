@@ -1,15 +1,10 @@
-import React, { useState, createContext } from "react";
-import Box from "@mui/material/Box";
+import React from "react";
 import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import CardMedia from "@mui/material/CardMedia";
 import { CardActionArea } from "@mui/material";
-
-import { AWS_S3_BASE_URL } from "../../../../constants";
-
+import { getImageUrl } from "../../../../utils/imageUtils";
 
 export default function ProductCard({ product }: any) {
   return (
@@ -20,8 +15,8 @@ export default function ProductCard({ product }: any) {
       <CardActionArea href={`/products/${product.slug}`}>
         <CardMedia
           sx={{ height: 200 }}
-          image={AWS_S3_BASE_URL + product.image_url}
-          title="green iguana"
+          image={getImageUrl(product.image_url)}
+          title={product.product_name}
         />
         <CardContent>
           <Typography variant="h5" fontSize={20} component="div">
