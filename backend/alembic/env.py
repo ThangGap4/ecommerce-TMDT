@@ -29,8 +29,8 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from app.models.sqlalchemy import models_arr
-target_metadata = models_arr
+from app.models.sqlalchemy import models_arr  # noqa: F401 - import to register models
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

@@ -7,6 +7,7 @@ from app.db import get_db_session
 from fastapi import HTTPException
 from fastapi_pagination import Page, paginate
 from app import app
+from app.i18n_keys import I18nKeys
 import os
 from colorama import Fore
 from datetime import datetime
@@ -81,7 +82,7 @@ class Product_Service():
             return products
         except Exception as e:
             db.rollback()
-            raise HTTPException(status_code=500, detail=f"Error fetching products: {str(e)}")
+            raise HTTPException(status_code=500, detail=I18nKeys.PRODUCT_FETCH_ERROR)
     # Get a single product by ID
     def get_product(product_slug: str):
         try:
@@ -90,27 +91,43 @@ class Product_Service():
             return product
         except Exception as e:
             db.rollback()  # Ensure to rollback on any error.
-            raise HTTPException(status_code=404, detail="Product not found")
+            raise HTTPException(status_code=404, detail=I18nKeys.PRODUCT_NOT_FOUND)
 
 
     # Update a product
-    def update_product(product_slug: str, product: ProductBase) -> Dict:
-        db_product = db.query(Product).get(product_slug)
-        if db_product:
-            update_data = product.dict(exclude_unset=True)
-            for key, value in update_data.items():
-                setattr(db_product, key, value)
+    def update_product(product_slug: str, product_data: dict) -> Dict:
+        try:
+            db_product = db.query(Product).filter(Product.slug == product_slug).first()
+            if not db_product:
+                raise HTTPException(status_code=404, detail=I18nKeys.PRODUCT_NOT_FOUND)
+            
+            # Update only provided fields
+            for key, value in product_data.items():
+                if value is not None and hasattr(db_product, key):
+                    setattr(db_product, key, value)
+            
             db.commit()
             db.refresh(db_product)
             return map_product_to_response(db_product).dict()
-        return {}
+        except HTTPException:
+            raise
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=I18nKeys.GENERAL_ERROR)
 
     # Delete a product
     def delete_product(product_slug: str) -> bool:
-        db_product = db.query(Product).get(product_slug)
-        if db_product:
+        try:
+            db_product = db.query(Product).filter(Product.slug == product_slug).first()
+            if not db_product:
+                raise HTTPException(status_code=404, detail=I18nKeys.PRODUCT_NOT_FOUND)
+            
             db.delete(db_product)
             db.commit()
             return True
-        return False
+        except HTTPException:
+            raise
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=I18nKeys.GENERAL_ERROR)
 

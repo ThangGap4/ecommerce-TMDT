@@ -5,6 +5,8 @@ export interface IUser {
   email: string;
   first_name?: string;
   last_name?: string;
+  phone_number?: string;
+  address?: string;
   role: "user" | "admin";
   is_active?: boolean;
 }

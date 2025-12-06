@@ -12,6 +12,8 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import AddProduct from "./pages/admin/AddProduct";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminProducts from "./pages/admin/AdminProducts";
+import Profile from "./pages/profile/Profile";
 import { ICartContext, ICartItem } from './types/CartTypes';
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -37,6 +39,16 @@ function App() {
               <Route path="/products" element={<Products />} />
               <Route path="/products/:productID/" element={<ProductPage />} />
               
+              {/* User routes - Protected */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              
               {/* Admin routes - Protected */}
               <Route
                 path="/admin"
@@ -59,6 +71,14 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="admin">
                     <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/products"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminProducts />
                   </ProtectedRoute>
                 }
               />

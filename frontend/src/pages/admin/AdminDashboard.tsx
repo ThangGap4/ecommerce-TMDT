@@ -104,6 +104,9 @@ export default function AdminDashboard() {
       )}
 
       <Box sx={{ mb: 3 }}>
+        <Button variant="contained" href="/admin/products" sx={{ mr: 2 }}>
+          Quan ly san pham
+        </Button>
         <Button variant="contained" href="/admin/add-product" sx={{ mr: 2 }}>
           Them san pham
         </Button>

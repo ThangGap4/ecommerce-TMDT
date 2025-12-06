@@ -3,10 +3,11 @@ from datetime import timedelta
 import traceback
 from typing import List
 
-from app.schemas.user_schemas import UserCreate, UserResponse, LoginRequest, TokenResponse
+from app.schemas.user_schemas import UserCreate, UserResponse, LoginRequest, TokenResponse, ProfileUpdate, PasswordChange
 from app.services.user_service import UserServices, require_user, require_admin
 from app.models.sqlalchemy import User
 from app.db import get_db_session
+from app.i18n_keys import I18nKeys
 
 
 router = APIRouter()
@@ -31,7 +32,7 @@ def register(user: UserCreate):
 def login(login_data: LoginRequest):
     user = UserServices.authenticate(login_data.email, login_data.password)
     if not user:
-        raise HTTPException(status_code=401, detail="Email hoac mat khau khong dung")
+        raise HTTPException(status_code=401, detail=I18nKeys.AUTH_INVALID_CREDENTIALS)
 
     access_token = UserServices.create_access_token(
         str(user.uuid),
@@ -53,16 +54,66 @@ def get_me(current_user = Depends(require_user)):
     return UserResponse.model_validate(current_user)
 
 
+# Update profile
+@router.put("/profile", response_model=UserResponse)
+def update_profile(profile_data: ProfileUpdate, current_user = Depends(require_user)):
+    db = get_db_session()
+    try:
+        user = db.query(User).filter(User.uuid == current_user.uuid).first()
+        if not user:
+            raise HTTPException(status_code=404, detail=I18nKeys.USER_NOT_FOUND)
+        
+        # Update fields if provided
+        if profile_data.first_name is not None:
+            user.first_name = profile_data.first_name
+        if profile_data.last_name is not None:
+            user.last_name = profile_data.last_name
+        if profile_data.phone_number is not None:
+            user.phone_number = profile_data.phone_number
+        if profile_data.address is not None:
+            user.address = profile_data.address
+        
+        db.commit()
+        db.refresh(user)
+        return UserResponse.model_validate(user)
+    finally:
+        db.close()
+
+
+# Change password
+@router.put("/change-password")
+def change_password(password_data: PasswordChange, current_user = Depends(require_user)):
+    db = get_db_session()
+    try:
+        user = db.query(User).filter(User.uuid == current_user.uuid).first()
+        if not user:
+            raise HTTPException(status_code=404, detail=I18nKeys.USER_NOT_FOUND)
+        
+        # Verify current password
+        if not UserServices.verify_password(password_data.current_password, user.hashed_password, user.salt):
+            raise HTTPException(status_code=400, detail=I18nKeys.PROFILE_WRONG_PASSWORD)
+        
+        # Hash new password
+        new_hashed, new_salt = UserServices.hash_password(password_data.new_password)
+        user.hashed_password = new_hashed
+        user.salt = new_salt
+        
+        db.commit()
+        return {"message": I18nKeys.PROFILE_PASSWORD_CHANGED}
+    finally:
+        db.close()
+
+
 # Protected route example (user only)
 @router.get("/protected")
 def protected_route(current_user = Depends(require_user)):
-    return {"message": "Day la route can dang nhap", "user": current_user.email}
+    return {"message": I18nKeys.AUTH_LOGIN_REQUIRED, "user": current_user.email}
 
 
 # Admin only route example
 @router.get("/admin-only")
 def admin_only_route(current_user = Depends(require_admin)):
-    return {"message": "Day la route chi danh cho admin", "user": current_user.email}
+    return {"message": I18nKeys.AUTH_ADMIN_ONLY, "user": current_user.email}
 
 
 # Get all users (admin only)
@@ -83,10 +134,10 @@ def promote_user(user_id: str, current_user = Depends(require_admin)):
     try:
         user = db.query(User).filter(User.uuid == user_id).first()
         if not user:
-            raise HTTPException(status_code=404, detail="Khong tim thay user")
+            raise HTTPException(status_code=404, detail=I18nKeys.USER_NOT_FOUND)
         
         if user.role == "admin":
-            raise HTTPException(status_code=400, detail="User da la admin")
+            raise HTTPException(status_code=400, detail=I18nKeys.USER_ALREADY_ADMIN)
         
         user.role = "admin"
         db.commit()
@@ -103,13 +154,13 @@ def demote_user(user_id: str, current_user = Depends(require_admin)):
     try:
         user = db.query(User).filter(User.uuid == user_id).first()
         if not user:
-            raise HTTPException(status_code=404, detail="Khong tim thay user")
+            raise HTTPException(status_code=404, detail=I18nKeys.USER_NOT_FOUND)
         
         if str(user.uuid) == str(current_user.uuid):
-            raise HTTPException(status_code=400, detail="Khong the tu ha cap chinh minh")
+            raise HTTPException(status_code=400, detail=I18nKeys.USER_CANNOT_DEMOTE_SELF)
         
         if user.role == "user":
-            raise HTTPException(status_code=400, detail="User da la user thuong")
+            raise HTTPException(status_code=400, detail=I18nKeys.USER_ALREADY_USER)
         
         user.role = "user"
         db.commit()

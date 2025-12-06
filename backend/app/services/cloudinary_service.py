@@ -3,6 +3,7 @@ import cloudinary.uploader
 import os
 from dotenv import load_dotenv
 from fastapi import UploadFile, HTTPException
+from app.i18n_keys import I18nKeys
 
 load_dotenv()
 
@@ -26,7 +27,7 @@ class CloudinaryService:
             if file.content_type not in allowed_types:
                 raise HTTPException(
                     status_code=400, 
-                    detail=f"File type not allowed. Allowed: {allowed_types}"
+                    detail=I18nKeys.UPLOAD_INVALID_TYPE
                 )
             
             # Upload to Cloudinary
@@ -50,7 +51,7 @@ class CloudinaryService:
             }
             
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+            raise HTTPException(status_code=500, detail=I18nKeys.UPLOAD_FAILED)
     
     @staticmethod
     def delete_image(public_id: str) -> bool:
@@ -61,4 +62,4 @@ class CloudinaryService:
             result = cloudinary.uploader.destroy(public_id)
             return result.get("result") == "ok"
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
+            raise HTTPException(status_code=500, detail=I18nKeys.UPLOAD_FAILED)

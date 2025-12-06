@@ -88,10 +88,12 @@ export interface ICreateProduct {
 
 export const createProduct = async (product: ICreateProduct) => {
   try {
+    const token = localStorage.getItem("access_token");
     const response = await fetch(`${BACKEND_URL}/products`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify(product),
     });
@@ -104,5 +106,64 @@ export const createProduct = async (product: ICreateProduct) => {
   } catch (err) {
     console.error("Error creating product:", err);
     return null;
+  }
+};
+
+// Update product
+export interface IUpdateProduct {
+  slug?: string;
+  product_type?: string;
+  product_name?: string;
+  price?: number;
+  blurb?: string;
+  description?: string;
+  image_url?: string;
+  sale_price?: number;
+}
+
+export const updateProduct = async (productSlug: string, product: IUpdateProduct) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    const response = await fetch(`${BACKEND_URL}/products/${productSlug}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify(product),
+    });
+
+    if (response.ok) {
+      return await response.json();
+    } else {
+      const error = await response.json();
+      throw new Error(error.detail || "Update product failed");
+    }
+  } catch (err) {
+    console.error("Error updating product:", err);
+    throw err;
+  }
+};
+
+// Delete product
+export const deleteProduct = async (productSlug: string) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    const response = await fetch(`${BACKEND_URL}/products/${productSlug}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+
+    if (response.ok) {
+      return await response.json();
+    } else {
+      const error = await response.json();
+      throw new Error(error.detail || "Delete product failed");
+    }
+  } catch (err) {
+    console.error("Error deleting product:", err);
+    throw err;
   }
 };

@@ -1,9 +1,13 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import Cart from "../cart/Cart";
 import { useAuth } from "../../../context/AuthContext";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "../../LanguageSwitcher";
 
 export default function SubNav() {
   const { user, isLoggedIn, logout } = useAuth();
+  const { t } = useTranslation();
 
   return (
     <nav id="sub-nav">
@@ -11,33 +15,40 @@ export default function SubNav() {
         {!isLoggedIn ? (
           <>
             <li>
-              <a href="/register">Dang ky</a>
+              <Link to="/register">{t("nav.register")}</Link>
             </li>
-            <li>Free Shipping on Orders Over US$ 100</li>
-            <div className="flex gap-4">
+            <li>{t("general.free_shipping")}</li>
+            <div className="flex gap-4 items-center">
               <li>
-                <a href="/login">Dang nhap</a>
+                <Link to="/login">{t("nav.login")}</Link>
               </li>
+              <LanguageSwitcher />
               <Cart />
             </div>
           </>
         ) : (
           <>
             <li>
-              Xin chao, {user?.first_name || user?.email}
+              <Link to="/profile" style={{ textDecoration: "none", color: "inherit" }}>
+                {t("nav.welcome")}, {user?.first_name || user?.email}
+              </Link>
             </li>
-            <li>Free Shipping on Orders Over US$ 100</li>
-            <div className="flex gap-4">
+            <li>{t("general.free_shipping")}</li>
+            <div className="flex gap-4 items-center">
               {user?.role === "admin" && (
                 <li>
-                  <a href="/admin">Admin</a>
+                  <Link to="/admin">{t("nav.admin")}</Link>
                 </li>
               )}
               <li>
+                <Link to="/profile">{t("nav.account")}</Link>
+              </li>
+              <li>
                 <button onClick={logout} style={{ cursor: "pointer", background: "none", border: "none", color: "inherit" }}>
-                  Dang xuat
+                  {t("nav.logout")}
                 </button>
               </li>
+              <LanguageSwitcher />
               <Cart />
             </div>
           </>

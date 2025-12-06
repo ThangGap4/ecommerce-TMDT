@@ -54,3 +54,29 @@ export const getMe = async (): Promise<IUser> => {
   const response = await api.get("/auth/me");
   return response.data;
 };
+
+// Cap nhat profile
+export interface IProfileUpdate {
+  first_name?: string;
+  last_name?: string;
+  phone_number?: string;
+  address?: string;
+}
+
+export const updateProfile = async (data: IProfileUpdate): Promise<IUser> => {
+  const response = await api.put("/auth/profile", data);
+  // Update localStorage
+  localStorage.setItem("user", JSON.stringify(response.data));
+  return response.data;
+};
+
+// Doi mat khau
+export interface IPasswordChange {
+  current_password: string;
+  new_password: string;
+}
+
+export const changePassword = async (data: IPasswordChange): Promise<{ message: string }> => {
+  const response = await api.put("/auth/change-password", data);
+  return response.data;
+};

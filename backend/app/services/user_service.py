@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from app.models.sqlalchemy import User
 from app.schemas.user_schemas import UserCreate, UserResponse, LoginRequest, TokenResponse
 from app.db import get_db_session
+from app.i18n_keys import I18nKeys
 
 load_dotenv()
 
@@ -47,7 +48,7 @@ class UserServices:
             # Check if email exists
             existing_user = db.query(User).filter(User.email == user_data["email"]).first()
             if existing_user:
-                raise ValueError("Email da duoc dang ky")
+                raise ValueError(I18nKeys.AUTH_EMAIL_ALREADY_EXISTS)
 
             # Hash password
             hashed_password, salt = UserServices.hash_password(user_data["password"])
@@ -97,7 +98,7 @@ class UserServices:
     def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token khong hop le",
+            detail=I18nKeys.AUTH_TOKEN_INVALID,
             headers={"WWW-Authenticate": "Bearer"},
         )
         try:
@@ -132,7 +133,7 @@ def require_user(current_user: User = Depends(UserServices.get_current_user)) ->
     if not current_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Tai khoan da bi vo hieu hoa"
+            detail=I18nKeys.AUTH_ACCOUNT_DISABLED
         )
     return current_user
 
@@ -142,11 +143,11 @@ def require_admin(current_user: User = Depends(UserServices.get_current_user)) -
     if not current_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Tai khoan da bi vo hieu hoa"
+            detail=I18nKeys.AUTH_ACCOUNT_DISABLED
         )
     if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Chi admin moi co quyen truy cap"
+            detail=I18nKeys.AUTH_ADMIN_ONLY
         )
     return current_user

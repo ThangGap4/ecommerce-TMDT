@@ -1,10 +1,12 @@
 from typing import Optional
-from fastapi import APIRouter, FastAPI, HTTPException, Query, Path, UploadFile, File
+from fastapi import APIRouter, FastAPI, HTTPException, Query, Path, UploadFile, File, Depends
 from fastapi.responses import JSONResponse
-from app.schemas.product_schemas import ProductBase, ProductCreate, ProductResponse
+from app.schemas.product_schemas import ProductBase, ProductCreate, ProductResponse, ProductUpdate
 from app.models.sqlalchemy import Product
 from app.services.product_service import Product_Service
 from app.services.cloudinary_service import CloudinaryService
+from app.services.user_service import require_admin
+from app.i18n_keys import I18nKeys
 
 product_router = APIRouter()
 
@@ -34,9 +36,23 @@ def read_product(product_slug: str):
     return Product_Service.get_product(product_slug)
 
 @product_router.post("/products", response_model=dict)
-def create_product(product: ProductCreate):
-    """Create a new product"""
+def create_product(product: ProductCreate, current_user = Depends(require_admin)):
+    """Create a new product (admin only)"""
     return Product_Service.create_product(product)
+
+
+@product_router.put("/products/{product_slug}", response_model=dict)
+def update_product(product_slug: str, product: ProductUpdate, current_user = Depends(require_admin)):
+    """Update a product (admin only)"""
+    return Product_Service.update_product(product_slug, product.dict(exclude_unset=True))
+
+
+@product_router.delete("/products/{product_slug}")
+def delete_product(product_slug: str, current_user = Depends(require_admin)):
+    """Delete a product (admin only)"""
+    Product_Service.delete_product(product_slug)
+    return {"message": I18nKeys.PRODUCT_DELETED}
+
 
 @product_router.post("/upload-image")
 async def upload_product_image(file: UploadFile = File(...)):
@@ -47,9 +63,9 @@ async def upload_product_image(file: UploadFile = File(...)):
 @product_router.post("/product/{product_slug}/cart")
 def add_product_to_cart(product_slug: str):
     #Implement product/cart logic
-    return {"message": "Product added to cart", "product_id": product_id}
+    return {"message": I18nKeys.PRODUCT_ADDED_TO_CART, "product_slug": product_slug}
 
 @product_router.post("/product/{product_slug}/review")
 def post_review_product(product_slug: str):
     #Implement product/review logic
-    return {"message": "Review posted", "product_id": product_id}
+    return {"message": I18nKeys.REVIEW_POSTED, "product_slug": product_slug}

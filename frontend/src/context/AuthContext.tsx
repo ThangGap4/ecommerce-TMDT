@@ -5,6 +5,7 @@ import { getCurrentUser, isAuthenticated, logout as authLogout } from "../servic
 interface AuthContextType {
   user: IUser | null;
   isLoggedIn: boolean;
+  isLoading: boolean;
   setUser: (user: IUser | null) => void;
   logout: () => void;
 }
@@ -12,6 +13,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoggedIn: false,
+  isLoading: true,
   setUser: () => {},
   logout: () => {},
 });
@@ -25,6 +27,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<IUser | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     // Check login status on mount
@@ -33,6 +36,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(currentUser);
       setIsLoggedIn(true);
     }
+    setIsLoading(false);
   }, []);
 
   const handleSetUser = (newUser: IUser | null) => {
@@ -51,6 +55,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       value={{
         user,
         isLoggedIn,
+        isLoading,
         setUser: handleSetUser,
         logout: handleLogout,
       }}
