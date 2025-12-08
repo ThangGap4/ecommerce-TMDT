@@ -1,5 +1,6 @@
 export interface IProduct {
-  product_id: string;
+  id: number;
+  product_id: string;  // Keep for backward compatibility, will be set from id
   product_type: string;
   product_name: string;
   price: number;
@@ -7,9 +8,11 @@ export interface IProduct {
   blurb: string;
   stock_quantity: number;
   image_url: string;
+  slug?: string;
 }
 
 export class Product implements IProduct {
+  id: number;
   product_id: string;
   product_type: string;
   product_name: string;
@@ -18,9 +21,11 @@ export class Product implements IProduct {
   blurb: string;
   stock_quantity: number;
   image_url: string;
+  slug?: string;
 
-  constructor(product: IProduct) {
-    this.product_id = product.product_id;
+  constructor(product: any) {
+    this.id = product.id;
+    this.product_id = String(product.id);  // Use id as string for product_id
     this.product_type = product.product_type;
     this.product_name = product.product_name;
     this.price = product.price;
@@ -28,6 +33,7 @@ export class Product implements IProduct {
     this.blurb = product.blurb;
     this.stock_quantity = product.stock_quantity;
     this.image_url = product.image_url;
+    this.slug = product.slug;
   }
 }
 

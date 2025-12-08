@@ -31,7 +31,7 @@ def read_products(
         search=search
     )
 
-@product_router.get("/products/{product_slug}", response_model=ProductBase)
+@product_router.get("/products/{product_slug}", response_model=ProductResponse)
 def read_product(product_slug: str):
     return Product_Service.get_product(product_slug)
 

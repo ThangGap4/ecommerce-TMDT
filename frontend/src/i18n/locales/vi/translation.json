@@ -96,6 +96,7 @@
     "items_found": "sản phẩm",
     "no_products_found": "Không tìm thấy sản phẩm",
     "try_different_filters": "Hãy thử thay đổi bộ lọc hoặc tìm kiếm khác",
+    "select_size": "Vui lòng chọn kích cỡ",
     "filter": {
       "title": "Bộ lọc",
       "search": "Tìm kiếm",

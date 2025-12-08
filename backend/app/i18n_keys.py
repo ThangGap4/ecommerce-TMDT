@@ -46,6 +46,7 @@ class I18nKeys:
     CART_ITEM_UPDATED = "cart.item_updated"
     CART_EMPTY = "cart.empty"
     CART_OUT_OF_STOCK = "cart.out_of_stock"
+    CART_ITEM_NOT_FOUND = "cart.item_not_found"
 
     # Order messages
     ORDER_CREATED = "order.created"

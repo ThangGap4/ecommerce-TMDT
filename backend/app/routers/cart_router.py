@@ -1,35 +1,41 @@
-from fastapi import APIRouter, Path, Query
-from app.schemas.cart_schemas import CartBase, CartItemBase
+from fastapi import APIRouter, Depends
+from app.schemas.cart_schemas import CartBase, AddToCartRequest, UpdateCartItemRequest
+from app.services.cart_service import CartService
+from app.services.user_service import require_user
+from app.models.sqlalchemy.user import User
 
 cart_router = APIRouter()
 
-@cart_router.get("/cart/{user_id}", response_model=CartBase)
-def get_user_cart(user_id: int = Path(..., description="The unique identifier of the user", example=123)):
-    """Retrieve the cart for a specific user by their user ID."""
-    pass
 
-@cart_router.post("/cart/{user_id}", response_model=CartBase)
-def add_to_user_cart(user_id: int = Path(..., description="The user's unique identifier", example=123),
-                     product_id: int = Query(..., description="The unique identifier of the product", example=101),
-                     product_size: str = Query(..., description="The size of the product", example="M"),
-                     product_color: str = Query(..., description="The color of the product", example="Red")):
-    """Add an item to a user's cart by specifying product details."""
-    pass
+@cart_router.get("/cart", response_model=CartBase)
+def get_user_cart(current_user: User = Depends(require_user)):
+    """Get current user's cart"""
+    return CartService.get_cart(str(current_user.uuid))
 
-@cart_router.delete("/cart/{user_id}/{cart_item_id}", response_model=CartBase)
-def remove_from_user_cart(user_id: int = Path(..., description="The user's unique identifier", example=123),
-                          cart_item_id: int = Path(..., description="The unique identifier of the cart item", example=456)):
-    """Remove an item from the user's cart using the cart item ID."""
-    pass
 
-@cart_router.put("/cart/{user_id}/{cart_item_id}", response_model=CartBase)
-def modify_cart_item_quantity(user_id: int = Path(..., description="The user's unique identifier", example=123),
-                              cart_item_id: int = Path(..., description="The unique identifier of the cart item", example=456),
-                              quantity: int = Query(..., description="New quantity of the product", example=2)):
-    """Modify the quantity of an existing cart item. """
-    pass
+@cart_router.post("/cart", response_model=CartBase)
+def add_to_cart(request: AddToCartRequest, current_user: User = Depends(require_user)):
+    """Add item to current user's cart"""
+    return CartService.add_to_cart(str(current_user.uuid), request)
 
-@cart_router.get("/cart/{user_id}/price", response_model=dict)
-def get_cart_price(user_id: int = Path(..., description="The user's unique identifier", example=123)):
-    """Calculate and retrieve the total price of the cart for a given user/session."""
-    pass
+
+@cart_router.put("/cart/{cart_item_id}", response_model=CartBase)
+def update_cart_item(
+    cart_item_id: int,
+    request: UpdateCartItemRequest,
+    current_user: User = Depends(require_user)
+):
+    """Update quantity of a cart item"""
+    return CartService.update_cart_item(str(current_user.uuid), cart_item_id, request.quantity)
+
+
+@cart_router.delete("/cart/{cart_item_id}", response_model=CartBase)
+def remove_from_cart(cart_item_id: int, current_user: User = Depends(require_user)):
+    """Remove item from cart"""
+    return CartService.remove_from_cart(str(current_user.uuid), cart_item_id)
+
+
+@cart_router.delete("/cart", response_model=CartBase)
+def clear_cart(current_user: User = Depends(require_user)):
+    """Clear all items from cart"""
+    return CartService.clear_cart(str(current_user.uuid))

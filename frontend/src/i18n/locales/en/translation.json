@@ -96,6 +96,7 @@
     "items_found": "items",
     "no_products_found": "No products found",
     "try_different_filters": "Try different filters or search terms",
+    "select_size": "Please select a size",
     "filter": {
       "title": "Filters",
       "search": "Search",

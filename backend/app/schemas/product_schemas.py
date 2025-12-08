@@ -35,7 +35,7 @@ class ProductUpdate(ProductBase):
 
 class ProductResponse(ProductBase):
     id: int = Field(..., example=1)
-    created_at: datetime = Field(..., example=datetime.now())
+    created_at: Optional[datetime] = Field(None, example=datetime.now())
     # Relationships
     categories: List[CategoryBase] = []
     sizes: List[ProductSizeBase] = []

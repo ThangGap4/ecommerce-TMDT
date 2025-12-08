@@ -1,53 +1,94 @@
-import React, { useContext, useState } from "react";
-import { Button } from "@mui/material";
-import { styled } from "@mui/material/styles";
-import { ICartContext, ICartItem } from "../../../../types/CartTypes";
-import { CartContext } from "../../../../App";
+import React, { useState } from "react";
+import { Button, CircularProgress, Snackbar, Alert } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Product } from "../../../../types/types";
+import { addToCart as addToCartAPI } from "../../../../services/Cart";
+import { useAuth } from "../../../../context/AuthContext";
 
 interface IAddToCart {
   product: Product;
   size: string;
   color: string;
 }
+
 export default function AddToCart({ product, size, color }: IAddToCart) {
-  const { cart, setCart } = useContext(CartContext);
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
-  function addToCart() {
-    // Check if the cart already has the exact same item with matching size and color
-    const existingCartItemIndex = cart.findIndex(
-      (item) =>
-        item.product.product_id === product.product_id &&
-        item.size === size &&
-        item.color === color
-    );
+  async function handleAddToCart() {
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
 
-    if (existingCartItemIndex >= 0) {
-      // If item exists with same size and color, increase its quantity
-      const newCart = [...cart];
-      newCart[existingCartItemIndex].quantity += 1;
-      setCart(newCart);
-    } else {
-      // If item does not exist or differs in size/color, add it as a new item to the cart
-      const newCartItem = {
-        product,
+    if (!size) {
+      setSnackbar({ open: true, message: t("product.select_size") || "Please select a size", severity: "error" });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await addToCartAPI({
+        product_id: product.id,
+        size: size,
         quantity: 1,
-        size,
-        color,
-      };
-      setCart([...cart, newCartItem]);
+      });
+      setSnackbar({ open: true, message: t("cart.item_added"), severity: "success" });
+    } catch (err: any) {
+      let message = t("common.error");
+      const detail = err.response?.data?.detail;
+      if (typeof detail === "string") {
+        message = detail;
+      } else if (Array.isArray(detail) && detail.length > 0) {
+        // FastAPI validation error format: [{type, loc, msg, input}]
+        message = detail.map((e: any) => e.msg).join(", ");
+      }
+      setSnackbar({ open: true, message, severity: "error" });
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <>
       {product ? (
-        <Button variant="contained" onClick={addToCart}>
-          Add To Cart
+        <Button
+          variant="contained"
+          onClick={handleAddToCart}
+          disabled={loading}
+          sx={{
+            bgcolor: "#1a1a1a",
+            "&:hover": { bgcolor: "#333" },
+            py: 1.5,
+            px: 4,
+            fontWeight: 600,
+          }}
+        >
+          {loading ? <CircularProgress size={24} color="inherit" /> : t("product.add_to_cart")}
         </Button>
       ) : (
-        <Button variant="contained">Out of Stock</Button>
+        <Button variant="contained" disabled>
+          {t("product.out_of_stock")}
+        </Button>
       )}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 }

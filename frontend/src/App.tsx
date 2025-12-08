@@ -14,6 +14,7 @@ import AddProduct from "./pages/admin/AddProduct";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
 import Profile from "./pages/profile/Profile";
+import CartPage from "./pages/cart/CartPage";
 import { ICartContext, ICartItem } from './types/CartTypes';
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -45,6 +46,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/cart"
+                element={
+                  <ProtectedRoute>
+                    <CartPage />
                   </ProtectedRoute>
                 }
               />

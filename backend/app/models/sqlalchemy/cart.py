@@ -2,7 +2,7 @@ from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Integer, F
 from sqlalchemy.orm import relationship, Mapped
 from app.db import Base
 from sqlalchemy.dialects.postgresql import UUID
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 from datetime import datetime
 if TYPE_CHECKING:
     from .user import User
@@ -16,7 +16,7 @@ class Cart(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user: Mapped["User"] = relationship("User", back_populates="cart", foreign_keys=[user_id])
-    items: Mapped["Cart_Item"] = relationship("Cart_Item", back_populates="cart", cascade="all, delete-orphan")
+    items: Mapped[List["Cart_Item"]] = relationship("Cart_Item", back_populates="cart", cascade="all, delete-orphan")
 
 
 class Cart_Item(Base):
