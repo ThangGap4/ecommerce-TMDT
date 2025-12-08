@@ -24,6 +24,9 @@ export default function AddToCart({ product, size, color }: IAddToCart) {
   });
 
   async function handleAddToCart() {
+    // Prevent double-click
+    if (loading) return;
+
     if (!isLoggedIn) {
       navigate("/login");
       return;

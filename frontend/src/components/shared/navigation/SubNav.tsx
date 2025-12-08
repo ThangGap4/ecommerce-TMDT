@@ -41,9 +41,6 @@ export default function SubNav() {
                 </li>
               )}
               <li>
-                <Link to="/profile">{t("nav.account")}</Link>
-              </li>
-              <li>
                 <button onClick={logout} style={{ cursor: "pointer", background: "none", border: "none", color: "inherit" }}>
                   {t("nav.logout")}
                 </button>
