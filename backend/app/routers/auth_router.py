@@ -1,9 +1,13 @@
 from fastapi import APIRouter, HTTPException, Depends
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 import traceback
+import secrets
 from typing import List
 
-from app.schemas.user_schemas import UserCreate, UserResponse, LoginRequest, TokenResponse, ProfileUpdate, PasswordChange
+from app.schemas.user_schemas import (
+    UserCreate, UserResponse, LoginRequest, TokenResponse, 
+    ProfileUpdate, PasswordChange, ForgotPasswordRequest, ResetPasswordRequest
+)
 from app.services.user_service import UserServices, require_user, require_admin
 from app.models.sqlalchemy import User
 from app.db import get_db_session
@@ -100,6 +104,65 @@ def change_password(password_data: PasswordChange, current_user = Depends(requir
         
         db.commit()
         return {"message": I18nKeys.PROFILE_PASSWORD_CHANGED}
+    finally:
+        db.close()
+
+
+# Forgot password - generate reset token
+@router.post("/forgot-password")
+def forgot_password(request: ForgotPasswordRequest):
+    """Request password reset - generates token and mocks email sending"""
+    db = get_db_session()
+    try:
+        user = db.query(User).filter(User.email == request.email).first()
+        
+        # Always return success to prevent email enumeration
+        if not user:
+            return {"message": I18nKeys.AUTH_RESET_EMAIL_SENT}
+        
+        # Generate reset token
+        reset_token = secrets.token_urlsafe(32)
+        reset_expires = datetime.now(timezone.utc) + timedelta(hours=1)
+        
+        user.reset_token = reset_token
+        user.reset_token_expires = reset_expires
+        db.commit()
+        
+        # Mock email sending (in production, send actual email)
+        print(f"[MOCK EMAIL] Password reset link for {user.email}:")
+        print(f"[MOCK EMAIL] http://localhost:3000/reset-password?token={reset_token}")
+        
+        return {"message": I18nKeys.AUTH_RESET_EMAIL_SENT}
+    finally:
+        db.close()
+
+
+# Reset password with token
+@router.post("/reset-password")
+def reset_password(request: ResetPasswordRequest):
+    """Reset password using token from email"""
+    db = get_db_session()
+    try:
+        user = db.query(User).filter(User.reset_token == request.token).first()
+        
+        if not user:
+            raise HTTPException(status_code=400, detail=I18nKeys.AUTH_INVALID_RESET_TOKEN)
+        
+        # Check if token expired
+        if user.reset_token_expires and user.reset_token_expires < datetime.now(timezone.utc):
+            raise HTTPException(status_code=400, detail=I18nKeys.AUTH_RESET_TOKEN_EXPIRED)
+        
+        # Update password
+        new_hashed, new_salt = UserServices.hash_password(request.new_password)
+        user.hashed_password = new_hashed
+        user.salt = new_salt
+        
+        # Clear reset token
+        user.reset_token = None
+        user.reset_token_expires = None
+        
+        db.commit()
+        return {"message": I18nKeys.AUTH_PASSWORD_RESET_SUCCESS}
     finally:
         db.close()
 

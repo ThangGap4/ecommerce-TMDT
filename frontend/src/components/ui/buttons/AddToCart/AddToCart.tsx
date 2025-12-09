@@ -3,8 +3,8 @@ import { Button, CircularProgress, Snackbar, Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Product } from "../../../../types/types";
-import { addToCart as addToCartAPI } from "../../../../services/Cart";
 import { useAuth } from "../../../../context/AuthContext";
+import { useCart } from "../../../../context/CartContext";
 
 interface IAddToCart {
   product: Product;
@@ -14,6 +14,7 @@ interface IAddToCart {
 
 export default function AddToCart({ product, size, color }: IAddToCart) {
   const { isLoggedIn } = useAuth();
+  const { addToCart } = useCart();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -39,11 +40,18 @@ export default function AddToCart({ product, size, color }: IAddToCart) {
 
     try {
       setLoading(true);
-      await addToCartAPI({
-        product_id: product.id,
-        size: size,
-        quantity: 1,
-      });
+      await addToCart(
+        {
+          product_id: product.id,
+          size: size,
+          quantity: 1,
+        },
+        {
+          name: product.product_name,
+          image: product.image_url,
+          slug: product.slug || "",
+        }
+      );
       setSnackbar({ open: true, message: t("cart.item_added"), severity: "success" });
     } catch (err: any) {
       let message = t("common.error");

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -24,72 +24,24 @@ import {
   ArrowForward,
 } from "@mui/icons-material";
 import { useAuth } from "../../context/AuthContext";
-import { getCart, updateCartItem, removeFromCart, ICart, ICartItem } from "../../services/Cart";
+import { useCart } from "../../context/CartContext";
+import { useCurrency } from "../../context/CurrencyContext";
+import { ICartItem } from "../../services/Cart";
 import { getImageUrl } from "../../utils/imageUtils";
 
 export default function CartPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isLoggedIn, isLoading: authLoading } = useAuth();
+  const { cart, loading, error, updateQuantity, removeItem, subtotal, total } = useCart();
+  const { formatPrice } = useCurrency();
 
-  const [cart, setCart] = useState<ICart | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState<number | null>(null);
-  const [error, setError] = useState("");
-
-  const fetchCart = async () => {
-    try {
-      setLoading(true);
-      const data = await getCart();
-      setCart(data);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || t("common.error"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
+  // Redirect if not logged in
+  React.useEffect(() => {
     if (!authLoading && !isLoggedIn) {
       navigate("/login");
-      return;
     }
-
-    if (isLoggedIn) {
-      fetchCart();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, authLoading, navigate]);
-
-  const handleUpdateQuantity = async (itemId: number, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    
-    setUpdating(itemId);
-    try {
-      const updated = await updateCartItem(itemId, newQuantity);
-      setCart(updated);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || t("common.error"));
-    } finally {
-      setUpdating(null);
-    }
-  };
-
-  const handleRemoveItem = async (itemId: number) => {
-    setUpdating(itemId);
-    try {
-      const updated = await removeFromCart(itemId);
-      setCart(updated);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || t("common.error"));
-    } finally {
-      setUpdating(null);
-    }
-  };
-
-  const formatPrice = (price: number) => {
-    return `$${price.toFixed(2)}`;
-  };
 
   if (authLoading) {
     return (
@@ -125,7 +77,7 @@ export default function CartPage() {
         </Typography>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
+          <Alert severity="error" sx={{ mb: 3 }}>
             {error}
           </Alert>
         )}
@@ -183,9 +135,8 @@ export default function CartPage() {
                   <React.Fragment key={item.id}>
                     <CartItemRow
                       item={item}
-                      updating={updating === item.id}
-                      onUpdateQuantity={handleUpdateQuantity}
-                      onRemove={handleRemoveItem}
+                      onUpdateQuantity={updateQuantity}
+                      onRemove={removeItem}
                       formatPrice={formatPrice}
                     />
                     {index < cart.items.length - 1 && <Divider />}
@@ -205,7 +156,7 @@ export default function CartPage() {
                   <Typography color="text.secondary">
                     {t("cart.subtotal")} ({cart.items.length} {t("cart.items")})
                   </Typography>
-                  <Typography fontWeight={600}>{formatPrice(cart.subtotal)}</Typography>
+                  <Typography fontWeight={600}>{formatPrice(subtotal)}</Typography>
                 </Box>
 
                 <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
@@ -222,7 +173,7 @@ export default function CartPage() {
                     {t("cart.total")}
                   </Typography>
                   <Typography variant="h6" fontWeight={700} color="primary">
-                    {formatPrice(cart.total)}
+                    {formatPrice(total)}
                   </Typography>
                 </Box>
 
@@ -260,16 +211,15 @@ export default function CartPage() {
   );
 }
 
-// Cart Item Row Component
+// Cart Item Row Component - No longer needs updating state (optimistic UI handles it)
 interface CartItemRowProps {
   item: ICartItem;
-  updating: boolean;
   onUpdateQuantity: (id: number, qty: number) => void;
   onRemove: (id: number) => void;
   formatPrice: (price: number) => string;
 }
 
-function CartItemRow({ item, updating, onUpdateQuantity, onRemove, formatPrice }: CartItemRowProps) {
+function CartItemRow({ item, onUpdateQuantity, onRemove, formatPrice }: CartItemRowProps) {
   const navigate = useNavigate();
 
   return (
@@ -278,8 +228,6 @@ function CartItemRow({ item, updating, onUpdateQuantity, onRemove, formatPrice }
         p: 3,
         display: "flex",
         gap: 3,
-        opacity: updating ? 0.6 : 1,
-        pointerEvents: updating ? "none" : "auto",
         transition: "opacity 0.2s",
       }}
     >
@@ -321,7 +269,7 @@ function CartItemRow({ item, updating, onUpdateQuantity, onRemove, formatPrice }
           {formatPrice(item.unit_price)} each
         </Typography>
 
-        {/* Quantity Controls */}
+        {/* Quantity Controls - Instant response, no loading state */}
         <Box sx={{ display: "flex", alignItems: "center", mt: 2, gap: 1 }}>
           <IconButton
             size="small"
@@ -347,7 +295,7 @@ function CartItemRow({ item, updating, onUpdateQuantity, onRemove, formatPrice }
       {/* Price & Remove */}
       <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between" }}>
         <Typography variant="h6" fontWeight={700} color="primary">
-          {formatPrice(item.total_price)}
+          {formatPrice(item.unit_price * item.quantity)}
         </Typography>
         <IconButton color="error" onClick={() => onRemove(item.id)}>
           <Delete />

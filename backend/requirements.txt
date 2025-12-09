@@ -12,3 +12,5 @@ python-dotenv
 colorama
 cloudinary
 python-multipart
+redis[hiredis]
+openai

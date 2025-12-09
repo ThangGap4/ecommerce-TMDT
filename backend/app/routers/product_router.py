@@ -1,17 +1,32 @@
 from typing import Optional
+import json
 from fastapi import APIRouter, FastAPI, HTTPException, Query, Path, UploadFile, File, Depends
 from fastapi.responses import JSONResponse
 from app.schemas.product_schemas import ProductBase, ProductCreate, ProductResponse, ProductUpdate
+from app.schemas.review_schemas import ReviewCreate, ReviewResponse, ReviewListResponse
 from app.models.sqlalchemy import Product
 from app.services.product_service import Product_Service
+from app.services.review_service import ReviewService
 from app.services.cloudinary_service import CloudinaryService
-from app.services.user_service import require_admin
+from app.services.user_service import require_admin, require_user
 from app.i18n_keys import I18nKeys
+from app.cache import cache_get, cache_set, invalidate_product_cache
 
 product_router = APIRouter()
 
+# Cache key builders
+def build_products_cache_key(page: int, limit: int, category: str = None, product_type: str = None, 
+                              min_price: float = None, max_price: float = None, search: str = None) -> str:
+    """Build cache key for products list based on query params"""
+    return f"products:page={page}:limit={limit}:cat={category}:type={product_type}:min={min_price}:max={max_price}:search={search}"
+
+def build_product_cache_key(product_slug: str) -> str:
+    """Build cache key for single product"""
+    return f"product:slug:{product_slug}"
+
+
 @product_router.get("/products")
-def read_products(
+async def read_products(
     page: int = Query(0, ge=0, description="Page number"),
     limit: int = Query(10, ge=1, le=100, description="Items per page"),
     category: Optional[str] = Query(None, description="Filter by category name"),
@@ -20,8 +35,16 @@ def read_products(
     max_price: Optional[float] = Query(None, ge=0, description="Maximum price"),
     search: Optional[str] = Query(None, description="Search by product name or description")
 ):
-    """Get products with optional filters"""
-    return Product_Service.get_products(
+    """Get products with optional filters - with Redis cache"""
+    cache_key = build_products_cache_key(page, limit, category, product_type, min_price, max_price, search)
+    
+    # Try cache first
+    cached = await cache_get(cache_key)
+    if cached:
+        return cached
+    
+    # Cache miss - query DB
+    result = Product_Service.get_products(
         page=page,
         limit=limit,
         category=category,
@@ -30,27 +53,59 @@ def read_products(
         max_price=max_price,
         search=search
     )
+    
+    # Set cache (TTL 5 minutes)
+    await cache_set(cache_key, result, ttl=300)
+    
+    return result
+
 
 @product_router.get("/products/{product_slug}", response_model=ProductResponse)
-def read_product(product_slug: str):
-    return Product_Service.get_product(product_slug)
+async def read_product(product_slug: str):
+    """Get single product by slug - with Redis cache"""
+    cache_key = build_product_cache_key(product_slug)
+    
+    # Try cache first
+    cached = await cache_get(cache_key)
+    if cached:
+        return cached
+    
+    # Cache miss - query DB  
+    product = Product_Service.get_product(product_slug)
+    
+    # Convert to dict for caching (Pydantic model -> dict)
+    from app.services.product_service import map_product_to_response
+    product_dict = map_product_to_response(product).dict()
+    
+    # Set cache (TTL 5 minutes)
+    await cache_set(cache_key, product_dict, ttl=300)
+    
+    return product
 
 @product_router.post("/products", response_model=dict)
-def create_product(product: ProductCreate, current_user = Depends(require_admin)):
+async def create_product(product: ProductCreate, current_user = Depends(require_admin)):
     """Create a new product (admin only)"""
-    return Product_Service.create_product(product)
+    result = Product_Service.create_product(product)
+    # Invalidate products list cache
+    await invalidate_product_cache()
+    return result
 
 
 @product_router.put("/products/{product_slug}", response_model=dict)
-def update_product(product_slug: str, product: ProductUpdate, current_user = Depends(require_admin)):
+async def update_product(product_slug: str, product: ProductUpdate, current_user = Depends(require_admin)):
     """Update a product (admin only)"""
-    return Product_Service.update_product(product_slug, product.dict(exclude_unset=True))
+    result = Product_Service.update_product(product_slug, product.dict(exclude_unset=True))
+    # Invalidate caches (specific product + list)
+    await invalidate_product_cache(slug=product_slug)
+    return result
 
 
 @product_router.delete("/products/{product_slug}")
-def delete_product(product_slug: str, current_user = Depends(require_admin)):
+async def delete_product(product_slug: str, current_user = Depends(require_admin)):
     """Delete a product (admin only)"""
     Product_Service.delete_product(product_slug)
+    # Invalidate caches (specific product + list)
+    await invalidate_product_cache(slug=product_slug)
     return {"message": I18nKeys.PRODUCT_DELETED}
 
 
@@ -60,12 +115,23 @@ async def upload_product_image(file: UploadFile = File(...)):
     result = CloudinaryService.upload_image(file, folder="products")
     return result
 
-@product_router.post("/product/{product_slug}/cart")
-def add_product_to_cart(product_slug: str):
-    #Implement product/cart logic
-    return {"message": I18nKeys.PRODUCT_ADDED_TO_CART, "product_slug": product_slug}
 
-@product_router.post("/product/{product_slug}/review")
-def post_review_product(product_slug: str):
-    #Implement product/review logic
-    return {"message": I18nKeys.REVIEW_POSTED, "product_slug": product_slug}
+# Review endpoints
+@product_router.get("/products/{product_slug}/reviews", response_model=ReviewListResponse)
+def get_product_reviews(product_slug: str):
+    """Get all reviews for a product with average rating"""
+    return ReviewService.get_product_reviews(product_slug)
+
+
+@product_router.post("/products/{product_slug}/reviews", response_model=ReviewResponse)
+def create_review(product_slug: str, review: ReviewCreate, current_user = Depends(require_user)):
+    """Create a new review for a product (authenticated users only)"""
+    return ReviewService.create_review(product_slug, review, current_user.uuid)
+
+
+@product_router.delete("/reviews/{review_id}")
+def delete_review(review_id: int, current_user = Depends(require_user)):
+    """Delete a review (owner or admin only)"""
+    is_admin = getattr(current_user, 'role', None) == 'admin'
+    ReviewService.delete_review(review_id, current_user.uuid, is_admin)
+    return {"message": I18nKeys.REVIEW_DELETED}

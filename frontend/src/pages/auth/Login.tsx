@@ -89,6 +89,11 @@ export default function Login() {
               </Alert>
             )}
             <Box sx={{ textAlign: "center", mt: 2 }}>
+              <Link href="/forgot-password" underline="hover">
+                Quen mat khau?
+              </Link>
+            </Box>
+            <Box sx={{ textAlign: "center", mt: 1 }}>
               <Link href="/register" underline="hover">
                 Chua co tai khoan? Dang ky ngay
               </Link>

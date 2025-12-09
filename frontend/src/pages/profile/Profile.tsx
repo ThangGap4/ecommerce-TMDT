@@ -25,15 +25,18 @@ import {
   Badge,
   Phone,
   LocationOn,
+  Logout,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { updateProfile, changePassword, IProfileUpdate, IPasswordChange } from "../../services/Auth";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
+import CurrencySwitcher from "../../components/CurrencySwitcher";
 
 export default function Profile() {
   const { t } = useTranslation();
-  const { user, isLoggedIn, setUser } = useAuth();
+  const { user, isLoggedIn, setUser, logout } = useAuth();
   const navigate = useNavigate();
 
   // Profile form state
@@ -140,21 +143,37 @@ export default function Profile() {
 
   return (
     <Box sx={{ bgcolor: "#f5f5f5", minHeight: "100vh" }}>
-      {/* Breadcrumbs */}
+      {/* Breadcrumbs + Quick Actions */}
       <Box sx={{ bgcolor: "white", py: 2, borderBottom: "1px solid #eee" }}>
         <Container maxWidth="lg">
-          <Breadcrumbs>
-            <Link
-              underline="hover"
-              color="inherit"
-              sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
-              onClick={() => navigate("/")}
-            >
-              <Home sx={{ mr: 0.5 }} fontSize="small" />
-              {t("nav.home")}
-            </Link>
-            <Typography color="text.primary">{t("profile.title")}</Typography>
-          </Breadcrumbs>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
+            <Breadcrumbs>
+              <Link
+                underline="hover"
+                color="inherit"
+                sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
+                onClick={() => navigate("/")}
+              >
+                <Home sx={{ mr: 0.5 }} fontSize="small" />
+                {t("nav.home")}
+              </Link>
+              <Typography color="text.primary">{t("profile.title")}</Typography>
+            </Breadcrumbs>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <LanguageSwitcher />
+              <CurrencySwitcher />
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                startIcon={<Logout />}
+                onClick={() => { logout(); navigate("/"); }}
+                sx={{ textTransform: "none" }}
+              >
+                {t("nav.logout")}
+              </Button>
+            </Box>
+          </Box>
         </Container>
       </Box>
 

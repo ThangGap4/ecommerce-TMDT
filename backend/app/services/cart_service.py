@@ -9,26 +9,15 @@ from app.schemas.cart_schemas import CartBase, CartItemBase, AddToCartRequest
 from app.db import get_db_session
 from app.i18n_keys import I18nKeys
 
+# Cart cache disabled - sync SQLAlchemy incompatible with async cache
+# Cart data changes frequently, DB queries are fast enough
+
 
 class CartService:
     @staticmethod
-    def get_or_create_cart(user_id: str) -> Cart:
-        """Get existing cart or create new one for user"""
-        db = get_db_session()
-        try:
-            cart = db.query(Cart).filter(Cart.user_id == user_id).first()
-            if not cart:
-                cart = Cart(user_id=user_id)
-                db.add(cart)
-                db.commit()
-                db.refresh(cart)
-            return cart
-        finally:
-            db.close()
-
-    @staticmethod
     def get_cart(user_id: str) -> CartBase:
         """Get user's cart with all items"""
+        # Fetch from DB
         db = get_db_session()
         try:
             cart = db.query(Cart).options(
@@ -36,7 +25,6 @@ class CartService:
             ).filter(Cart.user_id == user_id).first()
 
             if not cart:
-                # Create empty cart
                 cart = Cart(user_id=user_id)
                 db.add(cart)
                 db.commit()
@@ -76,7 +64,7 @@ class CartService:
                 user_id=str(cart.user_id),
                 items=items,
                 subtotal=subtotal,
-                total=subtotal  # Can add shipping/discount later
+                total=subtotal
             )
         finally:
             db.close()
@@ -138,36 +126,34 @@ class CartService:
                 db.add(new_item)
 
             db.commit()
+            
             return CartService.get_cart(user_id)
         finally:
             db.close()
 
     @staticmethod
-    def update_cart_item(user_id: str, cart_item_id: int, quantity: int) -> CartBase:
-        """Update quantity of cart item"""
+    def update_cart_item(user_id: str, cart_item_id: int, quantity: int) -> bool:
+        """Update quantity of cart item - returns success status only"""
         db = get_db_session()
         try:
-            cart = db.query(Cart).filter(Cart.user_id == user_id).first()
-            if not cart:
-                raise HTTPException(status_code=404, detail=I18nKeys.CART_EMPTY)
-
-            cart_item = db.query(Cart_Item).filter(
-                Cart_Item.id == cart_item_id,
-                Cart_Item.cart_id == cart.id
+            # Single optimized query - no joins needed
+            result = db.query(Cart_Item).join(Cart).filter(
+                Cart.user_id == user_id,
+                Cart_Item.id == cart_item_id
             ).first()
 
-            if not cart_item:
+            if not result:
                 raise HTTPException(status_code=404, detail=I18nKeys.CART_ITEM_NOT_FOUND)
 
-            cart_item.quantity = quantity
+            result.quantity = quantity
             db.commit()
-            return CartService.get_cart(user_id)
+            return True
         finally:
             db.close()
 
     @staticmethod
-    def remove_from_cart(user_id: str, cart_item_id: int) -> CartBase:
-        """Remove item from cart"""
+    def remove_from_cart(user_id: str, cart_item_id: int) -> bool:
+        """Remove item from cart - returns success status only"""
         db = get_db_session()
         try:
             cart = db.query(Cart).filter(Cart.user_id == user_id).first()
@@ -184,19 +170,21 @@ class CartService:
 
             db.delete(cart_item)
             db.commit()
-            return CartService.get_cart(user_id)
+            
+            return True
         finally:
             db.close()
 
     @staticmethod
-    def clear_cart(user_id: str) -> CartBase:
-        """Remove all items from cart"""
+    def clear_cart(user_id: str) -> bool:
+        """Remove all items from cart - returns success status only"""
         db = get_db_session()
         try:
             cart = db.query(Cart).filter(Cart.user_id == user_id).first()
             if cart:
                 db.query(Cart_Item).filter(Cart_Item.cart_id == cart.id).delete()
                 db.commit()
-            return CartService.get_cart(user_id)
+            
+            return True
         finally:
             db.close()

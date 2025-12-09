@@ -40,6 +40,7 @@
     "first_name": "First Name",
     "last_name": "Last Name",
     "forgot_password": "Forgot password?",
+    "forgot_password_desc": "Enter your email and we'll send you a reset link",
     "no_account": "Don't have an account?",
     "have_account": "Already have an account?",
     "login_success": "Login successful",
@@ -50,7 +51,19 @@
     "token_invalid": "Invalid token",
     "account_disabled": "Account has been disabled",
     "admin_only": "Admin access only",
-    "login_required": "Login required"
+    "login_required": "Login required",
+    "send_reset_link": "Send Reset Link",
+    "back_to_login": "Back to Login",
+    "reset_email_sent": "Reset link has been sent to your email",
+    "reset_password": "Reset Password",
+    "reset_password_desc": "Enter your new password",
+    "new_password": "New Password",
+    "passwords_not_match": "Passwords do not match",
+    "password_min_length": "Password must be at least 8 characters",
+    "reset_token_missing": "Reset token is missing",
+    "reset_token_invalid": "Invalid or expired reset token",
+    "password_reset_success": "Password reset successful! Redirecting to login...",
+    "error_generic": "Something went wrong. Please try again"
   },
   "user": {
     "not_found": "User not found",
@@ -188,7 +201,10 @@
     "password_too_short": "Password must be at least 8 characters",
     "member_since": "Member since",
     "phone_number": "Phone Number",
-    "address": "Address"
+    "address": "Address",
+    "preferences": "Preferences",
+    "language": "Language",
+    "currency": "Currency"
   },
   "general": {
     "success": "Success",
@@ -228,5 +244,11 @@
       "placeholder": "Enter your email",
       "subscribe": "Subscribe"
     }
+  },
+  "chat": {
+    "title": "Support Chat",
+    "welcome": "Hi! How can we help you today?",
+    "placeholder": "Type a message...",
+    "error": "Sorry, something went wrong. Please try again."
   }
 }

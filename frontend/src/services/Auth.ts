@@ -80,3 +80,20 @@ export const changePassword = async (data: IPasswordChange): Promise<{ message: 
   const response = await api.put("/auth/change-password", data);
   return response.data;
 };
+
+// Forgot password - request reset link
+export const forgotPassword = async (email: string): Promise<{ message: string }> => {
+  const response = await api.post("/auth/forgot-password", { email });
+  return response.data;
+};
+
+// Reset password with token
+export interface IResetPassword {
+  token: string;
+  new_password: string;
+}
+
+export const resetPassword = async (data: IResetPassword): Promise<{ message: string }> => {
+  const response = await api.post("/auth/reset-password", data);
+  return response.data;
+};

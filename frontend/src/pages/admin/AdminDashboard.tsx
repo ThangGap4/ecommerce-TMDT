@@ -89,7 +89,21 @@ export default function AdminDashboard() {
   return (
     <Container sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom>
-        Admin Dashboard - Quan ly User
+        Admin Dashboard
+      </Typography>
+
+      {/* Quick Links */}
+      <Box sx={{ display: "flex", gap: 2, mb: 4 }}>
+        <Button variant="contained" onClick={() => navigate("/admin/products")}>
+          Manage Products
+        </Button>
+        <Button variant="contained" onClick={() => navigate("/admin/orders")}>
+          Manage Orders
+        </Button>
+      </Box>
+
+      <Typography variant="h5" gutterBottom>
+        User Management
       </Typography>
 
       {error && (

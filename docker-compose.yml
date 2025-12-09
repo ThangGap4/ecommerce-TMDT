@@ -22,6 +22,7 @@ services:
       - "8000:8000"
     depends_on:
       - postgres
+      - redis
     labels:
       com.centurylinklabs.watchtower.enable: "true"
     env_file:
@@ -37,6 +38,15 @@ services:
       - "~/apps/postgres:/var/lib/postgresql/data"
     env_file:
       - ./.env
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - "~/apps/redis:/data"
+    command: redis-server --appendonly yes
+    restart: always
 
   pgadmin:
     image: dpage/pgadmin4

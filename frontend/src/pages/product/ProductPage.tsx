@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { getProductInfo } from "../../services/Product";
+import { useCurrency } from "../../context/CurrencyContext";
 
 import AddToCart from "../../components/ui/buttons/AddToCart/AddToCart";
 import RadioProduct from "../../components/ui/buttons/RadioProduct/RadioProduct";
@@ -41,6 +42,7 @@ export default function ProductPage() {
   const { productID } = useParams();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { formatPrice } = useCurrency();
   const [productInfo, setProductInfo] = useState<Product>();
   const [color, setColor] = useState<string>("red");
   const [size, setSize] = useState<string>("s");
@@ -217,23 +219,23 @@ export default function ProductPage() {
                     {productInfo.sale_price ? (
                       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                         <Typography variant="h4" color="error" fontWeight={700}>
-                          ${productInfo.sale_price}
+                          {formatPrice(productInfo.sale_price)}
                         </Typography>
                         <Typography
                           variant="h6"
                           sx={{ textDecoration: "line-through", color: "#999" }}
                         >
-                          ${productInfo.price}
+                          {formatPrice(productInfo.price)}
                         </Typography>
                         <Chip
-                          label={`Save $${(productInfo.price - productInfo.sale_price).toFixed(2)}`}
+                          label={`-${Math.round(((productInfo.price - productInfo.sale_price) / productInfo.price) * 100)}%`}
                           color="error"
                           size="small"
                         />
                       </Box>
                     ) : (
                       <Typography variant="h4" fontWeight={700}>
-                        ${productInfo.price}
+                        {formatPrice(productInfo.price)}
                       </Typography>
                     )}
                   </Box>

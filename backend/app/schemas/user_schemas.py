@@ -48,6 +48,18 @@ class PasswordChange(BaseModel):
     """Schema for changing password"""
     current_password: str = Field(..., example="OldPassword123")
     new_password: str = Field(..., min_length=8, example="NewPassword123")
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Schema for forgot password request"""
+    email: EmailStr = Field(..., example="john.doe@example.com")
+
+
+class ResetPasswordRequest(BaseModel):
+    """Schema for reset password with token"""
+    token: str = Field(..., example="abc123token")
+    new_password: str = Field(..., min_length=8, example="NewSecurePassword123")
+
     
 class UserResponse(UserBase):
     id: uuid.UUID = Field(..., alias="uuid", example=uuid.uuid4())

@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import Cart from "../cart/Cart";
 import { useAuth } from "../../../context/AuthContext";
 import { useTranslation } from "react-i18next";
-import LanguageSwitcher from "../../LanguageSwitcher";
+import { Person } from "@mui/icons-material";
 
 export default function SubNav() {
-  const { user, isLoggedIn, logout } = useAuth();
+  const { user, isLoggedIn } = useAuth();
   const { t } = useTranslation();
 
   return (
@@ -22,17 +22,11 @@ export default function SubNav() {
               <li>
                 <Link to="/login">{t("nav.login")}</Link>
               </li>
-              <LanguageSwitcher />
               <Cart />
             </div>
           </>
         ) : (
           <>
-            <li>
-              <Link to="/profile" style={{ textDecoration: "none", color: "inherit" }}>
-                {t("nav.welcome")}, {user?.first_name || user?.email}
-              </Link>
-            </li>
             <li>{t("general.free_shipping")}</li>
             <div className="flex gap-4 items-center">
               {user?.role === "admin" && (
@@ -41,11 +35,11 @@ export default function SubNav() {
                 </li>
               )}
               <li>
-                <button onClick={logout} style={{ cursor: "pointer", background: "none", border: "none", color: "inherit" }}>
-                  {t("nav.logout")}
-                </button>
+                <Link to="/profile" style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <Person sx={{ fontSize: 18 }} />
+                  {user?.first_name || user?.email?.split("@")[0]}
+                </Link>
               </li>
-              <LanguageSwitcher />
               <Cart />
             </div>
           </>

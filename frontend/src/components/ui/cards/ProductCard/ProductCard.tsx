@@ -5,8 +5,10 @@ import Typography from "@mui/material/Typography";
 import CardMedia from "@mui/material/CardMedia";
 import { CardActionArea, Box, Chip } from "@mui/material";
 import { getImageUrl } from "../../../../utils/imageUtils";
+import { useCurrency } from "../../../../context/CurrencyContext";
 
 export default function ProductCard({ product }: any) {
+  const { formatPrice } = useCurrency();
   const hasDiscount = product.sale_price && product.sale_price < product.price;
   const discountPercent = hasDiscount
     ? Math.round(((product.price - product.sale_price) / product.price) * 100)
@@ -111,7 +113,7 @@ export default function ProductCard({ product }: any) {
                     color: "#e94560",
                   }}
                 >
-                  ${product.sale_price}
+                  {formatPrice(product.sale_price)}
                 </Typography>
                 <Typography
                   sx={{
@@ -120,7 +122,7 @@ export default function ProductCard({ product }: any) {
                     fontSize: "14px",
                   }}
                 >
-                  ${product.price}
+                  {formatPrice(product.price)}
                 </Typography>
               </>
             ) : (
@@ -131,7 +133,7 @@ export default function ProductCard({ product }: any) {
                   color: "#1a1a2e",
                 }}
               >
-                ${product.price}
+                {formatPrice(product.price)}
               </Typography>
             )}
           </Box>

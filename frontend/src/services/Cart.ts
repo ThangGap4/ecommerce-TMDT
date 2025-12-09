@@ -27,32 +27,47 @@ export interface IAddToCartRequest {
   quantity: number;
 }
 
-// Get current user's cart
+export interface IStatusResponse {
+  status: string;
+}
+
+// Get current user's cart (for hydration on login/refresh)
 export const getCart = async (): Promise<ICart> => {
   const response = await api.get("/cart");
   return response.data;
 };
 
-// Add item to cart
+// Add item to cart - returns full cart (FE needs new item ID)
 export const addToCart = async (request: IAddToCartRequest): Promise<ICart> => {
   const response = await api.post("/cart", request);
   return response.data;
 };
 
-// Update cart item quantity
-export const updateCartItem = async (cartItemId: number, quantity: number): Promise<ICart> => {
+// Update cart item quantity - returns status only (optimistic UI)
+export const updateCartItem = async (cartItemId: number, quantity: number): Promise<IStatusResponse> => {
   const response = await api.put(`/cart/${cartItemId}`, { quantity });
   return response.data;
 };
 
-// Remove item from cart
-export const removeFromCart = async (cartItemId: number): Promise<ICart> => {
+// Remove item from cart - returns status only (optimistic UI)
+export const removeFromCart = async (cartItemId: number): Promise<IStatusResponse> => {
   const response = await api.delete(`/cart/${cartItemId}`);
   return response.data;
 };
 
-// Clear entire cart
-export const clearCart = async (): Promise<ICart> => {
+// Clear entire cart - returns status only
+export const clearCart = async (): Promise<IStatusResponse> => {
   const response = await api.delete("/cart");
   return response.data;
 };
+
+// Export as service object for convenience
+export const cartService = {
+  getCart,
+  addToCart,
+  updateCartItem,
+  removeFromCart,
+  clearCart,
+};
+
+export default cartService;

@@ -40,6 +40,7 @@
     "first_name": "Tên",
     "last_name": "Họ",
     "forgot_password": "Quên mật khẩu?",
+    "forgot_password_desc": "Nhập email để nhận link đặt lại mật khẩu",
     "no_account": "Chưa có tài khoản?",
     "have_account": "Đã có tài khoản?",
     "login_success": "Đăng nhập thành công",
@@ -50,7 +51,19 @@
     "token_invalid": "Token không hợp lệ",
     "account_disabled": "Tài khoản đã bị vô hiệu hóa",
     "admin_only": "Chỉ admin mới có quyền truy cập",
-    "login_required": "Yêu cầu đăng nhập"
+    "login_required": "Yêu cầu đăng nhập",
+    "send_reset_link": "Gửi link đặt lại",
+    "back_to_login": "Quay lại đăng nhập",
+    "reset_email_sent": "Link đặt lại mật khẩu đã được gửi đến email của bạn",
+    "reset_password": "Đặt lại mật khẩu",
+    "reset_password_desc": "Nhập mật khẩu mới của bạn",
+    "new_password": "Mật khẩu mới",
+    "passwords_not_match": "Mật khẩu xác nhận không khớp",
+    "password_min_length": "Mật khẩu phải có ít nhất 8 ký tự",
+    "reset_token_missing": "Thiếu mã xác thực",
+    "reset_token_invalid": "Mã xác thực không hợp lệ hoặc đã hết hạn",
+    "password_reset_success": "Đặt lại mật khẩu thành công! Đang chuyển đến trang đăng nhập...",
+    "error_generic": "Đã có lỗi xảy ra. Vui lòng thử lại"
   },
   "user": {
     "not_found": "Không tìm thấy người dùng",
@@ -188,7 +201,10 @@
     "password_too_short": "Mật khẩu phải có ít nhất 8 ký tự",
     "member_since": "Thành viên từ",
     "phone_number": "Số điện thoại",
-    "address": "Địa chỉ"
+    "address": "Địa chỉ",
+    "preferences": "Tuỳ chọn",
+    "language": "Ngôn ngữ",
+    "currency": "Tiền tệ"
   },
   "general": {
     "success": "Thành công",
@@ -228,5 +244,11 @@
       "placeholder": "Nhập email của bạn",
       "subscribe": "Đăng ký"
     }
+  },
+  "chat": {
+    "title": "Hỗ trợ trực tuyến",
+    "welcome": "Xin chào! Chúng tôi có thể giúp gì cho bạn?",
+    "placeholder": "Nhập tin nhắn...",
+    "error": "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại."
   }
 }

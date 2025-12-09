@@ -18,6 +18,10 @@ class I18nKeys:
     AUTH_ACCOUNT_DISABLED = "auth.account_disabled"
     AUTH_ADMIN_ONLY = "auth.admin_only"
     AUTH_LOGIN_REQUIRED = "auth.login_required"
+    AUTH_RESET_EMAIL_SENT = "auth.reset_email_sent"
+    AUTH_INVALID_RESET_TOKEN = "auth.invalid_reset_token"
+    AUTH_RESET_TOKEN_EXPIRED = "auth.reset_token_expired"
+    AUTH_PASSWORD_RESET_SUCCESS = "auth.password_reset_success"
 
     # User messages
     USER_NOT_FOUND = "user.not_found"
@@ -58,6 +62,8 @@ class I18nKeys:
     # Review messages
     REVIEW_POSTED = "review.posted"
     REVIEW_DELETED = "review.deleted"
+    REVIEW_NOT_FOUND = "review.not_found"
+    REVIEW_ALREADY_EXISTS = "review.already_exists"
 
     # General messages
     GENERAL_SUCCESS = "general.success"
