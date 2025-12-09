@@ -232,25 +232,25 @@ export default function Products() {
   return (
     <Box sx={{ bgcolor: "#f5f5f5", minHeight: "100vh" }}>
       {/* Breadcrumbs */}
-      <Box sx={{ bgcolor: "white", py: 2 }}>
-        <Box className="container mx-auto px-4">
-          <Breadcrumbs>
+      <Box sx={{ bgcolor: "white", py: { xs: 1.5, sm: 2 } }}>
+        <Box sx={{ maxWidth: 1280, mx: "auto", px: { xs: 2, sm: 3, lg: 4 } }}>
+          <Breadcrumbs sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>
             <Link
               underline="hover"
               color="inherit"
               sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
               onClick={() => navigate("/")}
             >
-              <Home sx={{ mr: 0.5 }} fontSize="small" />
+              <Home sx={{ mr: 0.5, fontSize: { xs: 16, sm: 20 } }} />
               {t("nav.home")}
             </Link>
-            <Typography color="text.primary">{t("nav.products")}</Typography>
+            <Typography color="text.primary" sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>{t("nav.products")}</Typography>
           </Breadcrumbs>
         </Box>
       </Box>
 
-      <Box className="container mx-auto px-4 py-6">
-        <Box sx={{ display: "flex", gap: 3 }}>
+      <Box sx={{ maxWidth: 1280, mx: "auto", px: { xs: 1.5, sm: 3, lg: 4 }, py: { xs: 2, sm: 3, md: 4 } }}>
+        <Box sx={{ display: "flex", gap: { md: 3 } }}>
           {/* Desktop Sidebar Filter */}
           <Paper
             sx={{
@@ -271,24 +271,25 @@ export default function Products() {
           {/* Main Content */}
           <Box sx={{ flex: 1 }}>
             {/* Header */}
-            <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }} elevation={0}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
+            <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: { xs: 2, sm: 3 }, borderRadius: { xs: 1, sm: 2 } }} elevation={0}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: { xs: 1, sm: 2 } }}>
                 <Box>
-                  <Typography variant="h5" fontWeight={600}>
+                  <Typography sx={{ fontWeight: 600, fontSize: { xs: "1.1rem", sm: "1.5rem" } }}>
                     {productType ? t(`product.filter.${productType.toLowerCase()}`) : t("product.all_products")}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
                     {products.length} {t("product.items_found")}
                   </Typography>
                 </Box>
 
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 2 }, flexWrap: "wrap" }}>
                   {/* Mobile Filter Button */}
                   <Button
                     variant="outlined"
                     startIcon={<FilterList />}
                     onClick={() => setMobileFilterOpen(true)}
-                    sx={{ display: { md: "none" }, textTransform: "none" }}
+                    size="small"
+                    sx={{ display: { md: "none" }, textTransform: "none", fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
                   >
                     {t("product.filter.title")}
                     {activeFiltersCount > 0 && (
@@ -296,7 +297,7 @@ export default function Products() {
                         label={activeFiltersCount}
                         size="small"
                         color="primary"
-                        sx={{ ml: 1, height: 20, minWidth: 20 }}
+                        sx={{ ml: 1, height: 18, minWidth: 18, fontSize: "0.7rem" }}
                       />
                     )}
                   </Button>

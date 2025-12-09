@@ -33,7 +33,12 @@
   },
   "auth": {
     "login_title": "Đăng nhập",
+    "login_subtitle": "Đăng nhập vào tài khoản để tiếp tục",
     "register_title": "Đăng ký",
+    "register_subtitle": "Tạo tài khoản để bắt đầu",
+    "register_cta": "Tạo tài khoản",
+    "or_divider": "HOẶC",
+    "logging_in": "Đang đăng nhập...",
     "email": "Địa chỉ email",
     "password": "Mật khẩu",
     "confirm_password": "Xác nhận mật khẩu",

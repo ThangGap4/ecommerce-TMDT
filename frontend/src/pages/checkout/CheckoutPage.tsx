@@ -22,6 +22,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { orderService } from '../../services/Order';
+import { paymentService } from '../../services/Payment';
 
 interface ShippingForm {
   name: string;
@@ -96,6 +97,7 @@ const CheckoutPage: React.FC = () => {
     
     setSubmitting(true);
     try {
+      // Step 1: Create order
       const order = await orderService.createOrder({
         shipping: {
           name: form.name,
@@ -106,11 +108,14 @@ const CheckoutPage: React.FC = () => {
         }
       });
       
-      // Clear cart in context (FE state)
+      // Step 2: Create Stripe checkout session
+      const session = await paymentService.createCheckoutSession(order.id);
+      
+      // Step 3: Clear cart in context (FE state)
       clearCart();
       
-      // Navigate to success page with order ID
-      navigate(`/order-success/${order.id}`);
+      // Step 4: Redirect to Stripe Checkout
+      window.location.href = session.checkout_url;
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to create order');
     } finally {
@@ -221,7 +226,7 @@ const CheckoutPage: React.FC = () => {
                 >
                   {submitting 
                     ? t('checkout.processing', 'Processing...') 
-                    : t('checkout.place_order', 'Place Order')
+                    : t('checkout.proceed_to_payment', 'Proceed to Payment')
                   }
                 </Button>
               </Box>

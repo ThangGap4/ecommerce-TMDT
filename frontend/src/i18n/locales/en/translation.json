@@ -33,6 +33,13 @@
   },
   "auth": {
     "login_title": "Login",
+    "login": "Sign In",
+    "login_failed": "Login failed",
+    "logging_in": "Signing in...",
+    "welcome_back": "Welcome Back",
+    "login_subtitle": "Sign in to continue shopping",
+    "or": "or",
+    "register_now": "Sign up now",
     "register_title": "Register",
     "email": "Email Address",
     "password": "Password",

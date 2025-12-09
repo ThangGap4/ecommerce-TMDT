@@ -4,20 +4,32 @@ import Cart from "../cart/Cart";
 import { useAuth } from "../../../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Person } from "@mui/icons-material";
+import { Box } from "@mui/material";
 
 export default function SubNav() {
   const { user, isLoggedIn } = useAuth();
   const { t } = useTranslation();
+
+  const Logo = () => (
+    <Link to="/" style={{ display: "flex", alignItems: "center" }}>
+      <Box
+        component="img"
+        src="/logo-ltk.png"
+        alt="LTK Ecommerce"
+        sx={{
+          height: { xs: "50px", sm: "70px", md: "90px" },
+          width: "auto",
+        }}
+      />
+    </Link>
+  );
 
   return (
     <nav id="sub-nav">
       <ul>
         {!isLoggedIn ? (
           <>
-            <li>
-              <Link to="/register">{t("nav.register")}</Link>
-            </li>
-            <li>{t("general.free_shipping")}</li>
+            <li><Logo /></li>
             <div className="flex gap-4 items-center">
               <li>
                 <Link to="/login">{t("nav.login")}</Link>
@@ -27,7 +39,7 @@ export default function SubNav() {
           </>
         ) : (
           <>
-            <li>{t("general.free_shipping")}</li>
+            <li><Logo /></li>
             <div className="flex gap-4 items-center">
               {user?.role === "admin" && (
                 <li>

@@ -2,7 +2,8 @@ import React from "react";
 import "./App.css";
 
 import Navigation from "./components/shared/navigation/Navigation";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Footer from "./components/shared/Footer";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
 //Page Imports
 import Home from "./pages/home/Home";
@@ -20,6 +21,8 @@ import Profile from "./pages/profile/Profile";
 import CartPage from "./pages/cart/CartPage";
 import CheckoutPage from "./pages/checkout/CheckoutPage";
 import OrderSuccessPage from "./pages/checkout/OrderSuccessPage";
+import PaymentSuccessPage from "./pages/checkout/PaymentSuccessPage";
+import PaymentCancelPage from "./pages/checkout/PaymentCancelPage";
 import OrdersPage from "./pages/orders/OrdersPage";
 import OrderDetailPage from "./pages/orders/OrderDetailPage";
 import { AuthProvider } from "./context/AuthContext";
@@ -28,6 +31,22 @@ import { CurrencyProvider } from "./context/CurrencyContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ChatWidget from "./components/ChatWidget";
 
+// Layout wrapper to conditionally show/hide navigation
+function AppLayout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const authPaths = ["/login", "/register", "/forgot-password", "/reset-password"];
+  const isAuthPage = authPaths.some(path => location.pathname.startsWith(path));
+
+  return (
+    <>
+      {!isAuthPage && <Navigation />}
+      {children}
+      {!isAuthPage && <Footer />}
+      {!isAuthPage && <ChatWidget />}
+    </>
+  );
+}
+
 function App() {
   return (
     <div className="App">
@@ -35,8 +54,8 @@ function App() {
         <CurrencyProvider>
           <CartProvider>
             <BrowserRouter>
-              <Navigation />
-              <Routes>
+              <AppLayout>
+                <Routes>
                 {/* Public routes */}
                 <Route path="/" element={<Home />} />
                 <Route path="/register" element={<Register />} />
@@ -76,6 +95,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <OrderSuccessPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/order/success"
+                element={
+                  <ProtectedRoute>
+                    <PaymentSuccessPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/order/cancel"
+                element={
+                  <ProtectedRoute>
+                    <PaymentCancelPage />
                   </ProtectedRoute>
                 }
               />
@@ -138,7 +173,7 @@ function App() {
                 }
               />
             </Routes>
-            <ChatWidget />
+            </AppLayout>
           </BrowserRouter>
         </CartProvider>
         </CurrencyProvider>

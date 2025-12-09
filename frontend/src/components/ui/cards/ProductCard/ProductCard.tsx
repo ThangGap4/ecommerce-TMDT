@@ -17,15 +17,14 @@ export default function ProductCard({ product }: any) {
   return (
     <Card
       sx={{
-        maxWidth: 280,
         width: "100%",
-        borderRadius: "12px",
+        borderRadius: { xs: "8px", sm: "12px" },
         overflow: "hidden",
         transition: "all 0.3s ease",
         border: "1px solid #eee",
         "&:hover": {
-          transform: "translateY(-8px)",
-          boxShadow: "0 12px 24px rgba(0,0,0,0.15)",
+          transform: { xs: "none", sm: "translateY(-8px)" },
+          boxShadow: { xs: "none", sm: "0 12px 24px rgba(0,0,0,0.15)" },
         },
       }}
     >
@@ -35,7 +34,7 @@ export default function ProductCard({ product }: any) {
           <CardMedia
             component="img"
             sx={{
-              height: 220,
+              height: { xs: 160, sm: 200, md: 220 },
               objectFit: "cover",
               transition: "transform 0.3s ease",
               "&:hover": {
@@ -52,51 +51,52 @@ export default function ProductCard({ product }: any) {
               size="small"
               sx={{
                 position: "absolute",
-                top: 12,
-                left: 12,
+                top: { xs: 8, sm: 12 },
+                left: { xs: 8, sm: 12 },
                 backgroundColor: "#e94560",
                 color: "white",
                 fontWeight: 600,
-                fontSize: "12px",
+                fontSize: { xs: "10px", sm: "12px" },
+                height: { xs: 20, sm: 24 },
               }}
             />
           )}
         </Box>
 
-        <CardContent sx={{ p: 2 }}>
+        <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
           {/* Product Name */}
           <Typography
             variant="h6"
             component="div"
             sx={{
               fontWeight: 600,
-              fontSize: "15px",
+              fontSize: { xs: "13px", sm: "15px" },
               lineHeight: 1.4,
-              height: "42px",
+              height: { xs: "36px", sm: "42px" },
               overflow: "hidden",
               textOverflow: "ellipsis",
               display: "-webkit-box",
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
-              mb: 1,
+              mb: { xs: 0.5, sm: 1 },
             }}
           >
             {product.product_name}
           </Typography>
 
-          {/* Blurb */}
+          {/* Blurb - hide on mobile */}
           <Typography
             variant="body2"
             color="text.secondary"
             sx={{
-              fontSize: "13px",
-              height: "40px",
+              fontSize: { xs: "11px", sm: "13px" },
+              height: { xs: "32px", sm: "40px" },
               overflow: "hidden",
               textOverflow: "ellipsis",
-              display: "-webkit-box",
+              display: { xs: "none", sm: "-webkit-box" },
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
-              mb: 1.5,
+              mb: { xs: 1, sm: 1.5 },
             }}
           >
             {product.blurb || "No description"}
@@ -109,7 +109,7 @@ export default function ProductCard({ product }: any) {
                 <Typography
                   sx={{
                     fontWeight: 700,
-                    fontSize: "18px",
+                    fontSize: { xs: "14px", sm: "18px" },
                     color: "#e94560",
                   }}
                 >
@@ -119,7 +119,7 @@ export default function ProductCard({ product }: any) {
                   sx={{
                     textDecoration: "line-through",
                     color: "#999",
-                    fontSize: "14px",
+                    fontSize: { xs: "11px", sm: "14px" },
                   }}
                 >
                   {formatPrice(product.price)}
@@ -129,7 +129,7 @@ export default function ProductCard({ product }: any) {
               <Typography
                 sx={{
                   fontWeight: 700,
-                  fontSize: "18px",
+                  fontSize: { xs: "14px", sm: "18px" },
                   color: "#1a1a2e",
                 }}
               >

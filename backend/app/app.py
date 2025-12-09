@@ -9,6 +9,8 @@ from app.routers.support_router import support_router
 from app.routers.auth_router import router as auth_router
 from app.routers.order_router import order_router
 from app.routers.chat_router import chat_router
+from app.routers.payment_router import payment_router
+from app.routers.webhook_router import webhook_router
 
 from app.db import create_tables
 from app.models.sqlalchemy import *
@@ -116,6 +118,8 @@ app.include_router(product_router)
 app.include_router(cart_router)
 app.include_router(order_router, tags=["Orders"])
 app.include_router(chat_router, tags=["Chat"])
+app.include_router(payment_router, tags=["Payments"])
+app.include_router(webhook_router, tags=["Webhooks"])
 app.include_router(support_router)
 add_pagination(app)
 
