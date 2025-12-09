@@ -6,7 +6,7 @@ export interface IProduct {
   price: number;
   sale_price: number;
   blurb: string;
-  stock_quantity: number;
+  stock: number;
   image_url: string;
   slug?: string;
 }
@@ -19,7 +19,7 @@ export class Product implements IProduct {
   sale_price: number;
   price: number;
   blurb: string;
-  stock_quantity: number;
+  stock: number;
   image_url: string;
   slug?: string;
 
@@ -31,7 +31,7 @@ export class Product implements IProduct {
     this.price = product.price;
     this.sale_price = product.sale_price;
     this.blurb = product.blurb;
-    this.stock_quantity = product.stock_quantity;
+    this.stock = product.stock;
     this.image_url = product.image_url;
     this.slug = product.slug;
   }

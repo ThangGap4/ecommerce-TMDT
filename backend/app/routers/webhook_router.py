@@ -48,7 +48,9 @@ async def stripe_webhook(request: Request):
                     int(order_id), 
                     "confirmed"
                 )
-                print(f"[Stripe Webhook] Order {order_id} marked as CONFIRMED (paid)")
+                # Deduct stock after successful payment
+                OrderService.deduct_stock_on_payment(int(order_id))
+                print(f"[Stripe Webhook] Order {order_id} marked as CONFIRMED (paid) and stock deducted")
             except Exception as e:
                 print(f"[Stripe Webhook] Error updating order {order_id}: {e}")
     

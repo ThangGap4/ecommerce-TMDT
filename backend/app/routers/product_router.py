@@ -100,13 +100,16 @@ async def update_product(product_slug: str, product: ProductUpdate, current_user
     return result
 
 
-@product_router.delete("/products/{product_slug}")
-async def delete_product(product_slug: str, current_user = Depends(require_admin)):
-    """Delete a product (admin only)"""
-    Product_Service.delete_product(product_slug)
-    # Invalidate caches (specific product + list)
+@product_router.put("/products/{product_slug}/stock", response_model=dict)
+async def update_product_stock(product_slug: str, stock: int, current_user = Depends(require_admin)):
+    """Update product stock (admin only)"""
+    if stock < 0:
+        raise HTTPException(status_code=400, detail="Stock cannot be negative")
+    
+    result = Product_Service.update_product_stock(product_slug, stock)
+    # Invalidate caches
     await invalidate_product_cache(slug=product_slug)
-    return {"message": I18nKeys.PRODUCT_DELETED}
+    return result
 
 
 @product_router.post("/upload-image")

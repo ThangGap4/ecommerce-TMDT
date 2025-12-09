@@ -95,6 +95,16 @@ const CheckoutPage: React.FC = () => {
     if (!validateForm()) return;
     if (submitting) return;
     
+    // Check stock availability
+    if (cart?.items && cart.items.length > 0) {
+      const outOfStockItems = cart.items.filter((item: any) => (item.product?.stock || 0) < item.quantity);
+      if (outOfStockItems.length > 0) {
+        const itemNames = outOfStockItems.map((item: any) => item.product?.product_name).join(', ');
+        setError(`Out of stock: ${itemNames}`);
+        return;
+      }
+    }
+    
     setSubmitting(true);
     try {
       // Step 1: Create order

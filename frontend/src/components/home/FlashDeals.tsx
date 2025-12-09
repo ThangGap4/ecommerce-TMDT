@@ -260,7 +260,7 @@ export default function FlashDeals({ products, endTime }: FlashDealsProps) {
                     sx={{
                       position: "absolute",
                       height: "100%",
-                      width: `${Math.min((product.stock_quantity || 50) / 100 * 100, 100)}%`,
+                      width: `${Math.min((product.stock || 50) / 100 * 100, 100)}%`,
                       background: "linear-gradient(90deg, #ff6b6b, #ff424e)",
                       borderRadius: 8,
                     }}

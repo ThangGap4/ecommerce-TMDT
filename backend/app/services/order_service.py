@@ -5,7 +5,7 @@ import math
 
 from app.models.sqlalchemy.order import Order, OrderItem, OrderStatus
 from app.models.sqlalchemy.cart import Cart, Cart_Item
-from app.models.sqlalchemy.product import ProductSize
+from app.models.sqlalchemy.product import ProductSize, Product
 from app.models.sqlalchemy.user import User
 from app.schemas.order_schemas import (
     CreateOrderRequest, OrderResponse, OrderItemResponse, OrderListItem,
@@ -46,15 +46,25 @@ class OrderService:
                     continue
                 
                 # Phase 5: Stock validation at checkout only
-                if cart_item.product_size:
-                    if cart_item.product_size.stock_quantity < cart_item.quantity:
-                        out_of_stock_items.append({
-                            'name': product.product_name,
-                            'size': cart_item.product_size.size,
-                            'available': cart_item.product_size.stock_quantity,
-                            'requested': cart_item.quantity
-                        })
-                        continue
+                # Check product stock first
+                if product.stock < cart_item.quantity:
+                    out_of_stock_items.append({
+                        'name': product.product_name,
+                        'size': cart_item.product_size.size if cart_item.product_size else None,
+                        'available': product.stock,
+                        'requested': cart_item.quantity
+                    })
+                    continue
+                
+                # Also check size stock if exists
+                if cart_item.product_size and cart_item.product_size.stock_quantity < cart_item.quantity:
+                    out_of_stock_items.append({
+                        'name': product.product_name,
+                        'size': cart_item.product_size.size,
+                        'available': min(product.stock, cart_item.product_size.stock_quantity),
+                        'requested': cart_item.quantity
+                    })
+                    continue
                     
                 unit_price = product.sale_price or product.price
                 total_price = unit_price * cart_item.quantity
@@ -369,10 +379,78 @@ class OrderService:
                     detail=I18nKeys.ORDER_NOT_FOUND
                 )
             
+            # Check if we need to rollback stock
+            old_status = order.status
+            if old_status == "confirmed" and new_status in ["cancelled", "refunded"]:
+                OrderService.rollback_stock_on_cancel(order_id)
+            
             order.status = new_status
             db.commit()
             db.refresh(order)
             
             return OrderService.admin_get_order_detail(order_id)
+        finally:
+            db.close()
+
+    @staticmethod
+    def deduct_stock_on_payment(order_id: int):
+        """Deduct stock from products when payment is confirmed"""
+        db = get_db_session()
+        try:
+            # Get order with items
+            order = db.query(Order).options(
+                joinedload(Order.items)
+            ).filter(Order.id == order_id).first()
+            
+            if not order:
+                print(f"[Stock Deduction] Order {order_id} not found")
+                return
+            
+            # Deduct stock for each item
+            for item in order.items:
+                product = db.query(Product).filter(Product.id == item.product_id).first()
+                if product:
+                    if product.stock >= item.quantity:
+                        product.stock -= item.quantity
+                        print(f"[Stock Deduction] Deducted {item.quantity} from product {product.product_name}, remaining: {product.stock}")
+                    else:
+                        print(f"[Stock Deduction] Insufficient stock for product {product.product_name}: has {product.stock}, need {item.quantity}")
+                else:
+                    print(f"[Stock Deduction] Product {item.product_id} not found")
+            
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            print(f"[Stock Deduction] Error deducting stock for order {order_id}: {e}")
+        finally:
+            db.close()
+
+    @staticmethod
+    def rollback_stock_on_cancel(order_id: int):
+        """Rollback stock when order is cancelled or refunded"""
+        db = get_db_session()
+        try:
+            # Get order with items
+            order = db.query(Order).options(
+                joinedload(Order.items)
+            ).filter(Order.id == order_id).first()
+            
+            if not order:
+                print(f"[Stock Rollback] Order {order_id} not found")
+                return
+            
+            # Add back stock for each item
+            for item in order.items:
+                product = db.query(Product).filter(Product.id == item.product_id).first()
+                if product:
+                    product.stock += item.quantity
+                    print(f"[Stock Rollback] Added back {item.quantity} to product {product.product_name}, now: {product.stock}")
+                else:
+                    print(f"[Stock Rollback] Product {item.product_id} not found")
+            
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            print(f"[Stock Rollback] Error rolling back stock for order {order_id}: {e}")
         finally:
             db.close()

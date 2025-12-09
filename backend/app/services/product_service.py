@@ -28,6 +28,7 @@ def map_product_to_response(db_product: Product) -> ProductResponse:
         categories=categories,
         sizes=sizes,
         sale_price=db_product.sale_price,
+        stock=db_product.stock,
         created_at=db_product.created_at if hasattr(db_product, 'created_at') and db_product.created_at else datetime.now()
     )
 class Product_Service():
@@ -125,6 +126,24 @@ class Product_Service():
             db.delete(db_product)
             db.commit()
             return True
+        except HTTPException:
+            raise
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=I18nKeys.GENERAL_ERROR)
+
+    @staticmethod
+    def update_product_stock(product_slug: str, stock: int) -> Dict:
+        """Update product stock"""
+        try:
+            db_product = db.query(Product).filter(Product.slug == product_slug).first()
+            if not db_product:
+                raise HTTPException(status_code=404, detail=I18nKeys.PRODUCT_NOT_FOUND)
+            
+            db_product.stock = stock
+            db.commit()
+            db.refresh(db_product)
+            return {"message": "Stock updated successfully", "stock": stock}
         except HTTPException:
             raise
         except Exception as e:
