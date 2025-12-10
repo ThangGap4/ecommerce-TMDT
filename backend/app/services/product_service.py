@@ -35,10 +35,38 @@ class Product_Service():
     
     # Create a new product
     def create_product(product: ProductBase) -> Dict:
-        db_product = Product(**product.dict())
+        # Tạo product chính
+        product_data = product.dict(exclude={"sizes", "colors"})
+        db_product = Product(**product_data)
         db.add(db_product)
         db.commit()
         db.refresh(db_product)
+
+        # Tạo size nếu có
+        sizes = getattr(product, "sizes", None)
+        if sizes:
+            for size in sizes:
+                db_size = ProductSize(
+                    product_id=db_product.id,
+                    size=size.size,
+                    stock_quantity=size.stock_quantity
+                )
+                db.add(db_size)
+            db.commit()
+
+        # Tạo màu nếu có
+        colors = getattr(product, "colors", None)
+        if colors:
+            from app.models.sqlalchemy.product_color import ProductColor
+            for color in colors:
+                db_color = ProductColor(
+                    product_id=db_product.id,
+                    color=color.color,
+                    image_url=color.image_url
+                )
+                db.add(db_color)
+            db.commit()
+
         return map_product_to_response(db_product).dict()
 
     # Get a list of all products with filters

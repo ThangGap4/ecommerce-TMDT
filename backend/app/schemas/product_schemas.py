@@ -3,6 +3,13 @@ from typing import Optional, List
 from datetime import datetime
 import uuid
 
+class ProductColorBase(BaseModel):
+    color: str = Field(..., example="Red")
+    image_url: Optional[str] = Field(None, example="http://example.com/red.png")
+
+class ProductColorResponse(ProductColorBase):
+    id: int = Field(..., example=1)
+
 class CategoryBase(BaseModel):
     name: str = Field(..., example="Electronics")
 
@@ -18,15 +25,24 @@ class ProductBase(BaseModel):
     blurb: Optional[str] = Field(None, example="A short description of the product")
     description: Optional[str] = Field(None, example="A detailed description of the product")
     image_url: Optional[str] = Field(None, example="http://example.com/image.png")
-    sale_price: Optional[float]  = Field(..., gt=0, example=9.99)
+    sale_price: Optional[float] = Field(None, gt=0, example=9.99)
     stock: int = Field(..., ge=0, example=100)
 
 class ProductCreate(ProductBase):
-    # Here we do not include relationships, assuming that only base product data is needed for creation
-    pass
+    stock: Optional[int] = Field(None, ge=0, example=100)
+    sizes: Optional[List[ProductSizeBase]] = Field(None, description="List of sizes with stock")
+    colors: Optional[List[ProductColorBase]] = Field(None, description="List of colors with image")
 
-class ProductUpdate(ProductBase):
+class ProductUpdate(BaseModel):
+    slug: Optional[str] = Field(None, example="unique-product-slug-1234")
+    product_type: Optional[str] = Field(None, example="Accessory")
+    product_name: Optional[str] = Field(None, example="Stylish Sunglasses")
     price: Optional[float] = Field(None, gt=0, example=19.99)
+    blurb: Optional[str] = Field(None, example="A short description of the product")
+    description: Optional[str] = Field(None, example="A detailed description of the product")
+    image_url: Optional[str] = Field(None, example="http://example.com/image.png")
+    sale_price: Optional[float] = Field(None, gt=0, example=9.99)
+    stock: Optional[int] = Field(None, ge=0, example=100)
 
     @validator('price')
     def check_price(cls, v):
@@ -37,9 +53,9 @@ class ProductUpdate(ProductBase):
 class ProductResponse(ProductBase):
     id: int = Field(..., example=1)
     created_at: Optional[datetime] = Field(None, example=datetime.now())
-    # Relationships
     categories: List[CategoryBase] = []
     sizes: List[ProductSizeBase] = []
+    colors: List[ProductColorResponse] = []
 
 class ProductListResponse(BaseModel):
     products: List[ProductResponse]

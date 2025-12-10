@@ -80,6 +80,7 @@ export interface ICreateProduct {
   product_type: string;
   product_name: string;
   price: number;
+  stock: number;
   blurb?: string;
   description?: string;
   image_url?: string;

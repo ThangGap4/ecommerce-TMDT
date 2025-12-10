@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 from fastapi import HTTPException
 from app.routers.webhook_router import stripe_webhook
 from app.models.sqlalchemy import Order, OrderItem, Product
@@ -105,14 +105,19 @@ class TestWebhookStockHandling:
             updated_product = db_session.query(Product).filter(Product.id == sample_product.id).first()
             assert updated_product.stock == initial_stock
 
-    def test_webhook_invalid_signature(self):
+    @pytest.mark.asyncio
+    async def test_webhook_invalid_signature(self):
         """Test webhook với invalid signature"""
-        with patch('stripe.Webhook.construct_event', side_effect=Exception("Invalid signature")):
+        mock_request = MagicMock()
+        mock_request.body = AsyncMock(return_value=b'payload')
+        mock_request.headers.get = MagicMock(return_value='signature')
+        
+        with patch('stripe.Webhook.construct_event', side_effect=ValueError("Invalid signature")):
             with pytest.raises(HTTPException) as exc_info:
-                stripe_webhook(MagicMock(), MagicMock())
+                await stripe_webhook(mock_request)
 
             assert exc_info.value.status_code == 400
-            assert "Invalid signature" in str(exc_info.value.detail)
+            assert "Invalid payload" in str(exc_info.value.detail)
 
     def test_webhook_checkout_completed_no_order_id(self, db_session):
         """Test webhook checkout completed without order_id"""
@@ -128,7 +133,11 @@ class TestWebhookStockHandling:
 
         # Mock Stripe webhook verification
         with patch('stripe.Webhook.construct_event', return_value=payload):
+            mock_request = MagicMock()
+            mock_request.body = AsyncMock(return_value=b'payload')
+            mock_request.headers.get = MagicMock(return_value='signature')
+            
             # Call webhook - should not crash
-            result = stripe_webhook(MagicMock(), MagicMock())
+            result = stripe_webhook(mock_request)
 
             assert result == {"status": "success"}

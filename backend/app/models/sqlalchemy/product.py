@@ -22,6 +22,7 @@ class Product(Base):
     reviews = relationship("Review", back_populates="product")
     categories = relationship("Category", secondary=product_categories, back_populates="products")
     sizes = relationship("ProductSize", back_populates="product")
+    colors = relationship("ProductColor", back_populates="product")
 
 
 class ProductSize(Base):

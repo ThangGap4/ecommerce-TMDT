@@ -24,6 +24,7 @@ export default function AddProduct() {
     product_type: "",
     product_name: "",
     price: 0,
+    stock: 0,
     blurb: "",
     description: "",
     image_url: "",
@@ -41,7 +42,7 @@ export default function AddProduct() {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "price" || name === "sale_price" ? Number(value) : value,
+      [name]: ["price", "sale_price", "stock"].includes(name) ? Number(value) : value,
     }));
   };
 
@@ -117,6 +118,7 @@ export default function AddProduct() {
         product_type: "",
         product_name: "",
         price: 0,
+        stock: 0,
         blurb: "",
         description: "",
         image_url: "",
@@ -197,7 +199,7 @@ export default function AddProduct() {
               </Select>
             </FormControl>
 
-            {/* Price */}
+            {/* Price & Stock */}
             <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
               <TextField
                 fullWidth
@@ -217,6 +219,16 @@ export default function AddProduct() {
                 onChange={handleInputChange}
                 InputProps={{ inputProps: { min: 0, step: 0.01 } }}
                 helperText="Leave empty if no sale"
+              />
+              <TextField
+                fullWidth
+                label="Stock *"
+                name="stock"
+                type="number"
+                value={formData.stock || ""}
+                onChange={handleInputChange}
+                InputProps={{ inputProps: { min: 0, step: 1 } }}
+                helperText="Số lượng tồn kho ban đầu"
               />
             </Box>
 

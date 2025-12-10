@@ -1,12 +1,17 @@
 import pytest
+import sys
+import os
+
+# Add backend directory to Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.db import Base, get_db_session
 from app.models.sqlalchemy import Product, Category, ProductSize, User, Cart, Cart_Item, Order, OrderItem
-import os
 
 # Test database URL
-TEST_DATABASE_URL = "postgresql://test_user:test_password@localhost:5432/test_ecommerce"
+TEST_DATABASE_URL = "postgresql://ecommerce_waak_user:nV5Yy0GSffPu93KWs3muTAqv1weEuB7v@dpg-d4osgf75r7bs73d6s3jg-a.virginia-postgres.render.com:5432/ecommerce_waak"
 
 @pytest.fixture(scope="session")
 def engine():

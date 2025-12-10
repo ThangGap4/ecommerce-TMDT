@@ -85,8 +85,8 @@ async def read_product(product_slug: str):
 @product_router.post("/products", response_model=dict)
 async def create_product(product: ProductCreate, current_user = Depends(require_admin)):
     """Create a new product (admin only)"""
+    # product: ProductCreate đã nhận sizes/colors
     result = Product_Service.create_product(product)
-    # Invalidate products list cache
     await invalidate_product_cache()
     return result
 

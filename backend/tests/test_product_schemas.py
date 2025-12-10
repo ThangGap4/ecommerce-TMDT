@@ -49,7 +49,7 @@ class TestProductSchemas:
             price=100.0
         )
         # Stock sẽ được set default trong model
-        assert not hasattr(product, 'stock')
+        assert product.stock is None
 
     def test_product_update_stock_optional(self):
         """Test ProductUpdate với stock optional"""
