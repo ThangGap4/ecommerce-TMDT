@@ -46,22 +46,19 @@ class OrderService:
                     continue
                 
                 # Phase 5: Stock validation at checkout only
-                # Check product stock first
-                if product.stock < cart_item.quantity:
+                # Check size stock first if available, otherwise check product stock
+                if cart_item.product_size:
+                    # If product has sizes, check size stock
+                    available_stock = cart_item.product_size.stock_quantity
+                else:
+                    # If no size, check product stock
+                    available_stock = product.stock
+                
+                if available_stock < cart_item.quantity:
                     out_of_stock_items.append({
                         'name': product.product_name,
                         'size': cart_item.product_size.size if cart_item.product_size else None,
-                        'available': product.stock,
-                        'requested': cart_item.quantity
-                    })
-                    continue
-                
-                # Also check size stock if exists
-                if cart_item.product_size and cart_item.product_size.stock_quantity < cart_item.quantity:
-                    out_of_stock_items.append({
-                        'name': product.product_name,
-                        'size': cart_item.product_size.size,
-                        'available': min(product.stock, cart_item.product_size.stock_quantity),
+                        'available': available_stock,
                         'requested': cart_item.quantity
                     })
                     continue

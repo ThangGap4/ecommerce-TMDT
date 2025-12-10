@@ -11,7 +11,7 @@ from app.db import Base, get_db_session
 from app.models.sqlalchemy import Product, Category, ProductSize, User, Cart, Cart_Item, Order, OrderItem
 
 # Test database URL
-TEST_DATABASE_URL = "postgresql://ecommerce_waak_user:nV5Yy0GSffPu93KWs3muTAqv1weEuB7v@dpg-d4osgf75r7bs73d6s3jg-a.virginia-postgres.render.com:5432/ecommerce_waak"
+TEST_DATABASE_URL = ""
 
 @pytest.fixture(scope="session")
 def engine():

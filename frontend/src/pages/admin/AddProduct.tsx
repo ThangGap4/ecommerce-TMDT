@@ -13,7 +13,11 @@ import {
   Select,
   FormControl,
   InputLabel,
+  IconButton,
+  Divider,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
 import { uploadProductImage, createProduct, ICreateProduct } from "../../services/Product";
 
 const PRODUCT_TYPES = ["Tops", "Bottoms", "Shoes", "New Arrivals", "Sale"];
@@ -29,6 +33,8 @@ export default function AddProduct() {
     description: "",
     image_url: "",
     sale_price: undefined,
+    sizes: [],
+    colors: [],
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -123,6 +129,8 @@ export default function AddProduct() {
         description: "",
         image_url: "",
         sale_price: undefined,
+        sizes: [],
+        colors: [],
       });
       setImageFile(null);
       setImagePreview("");
@@ -228,9 +236,144 @@ export default function AddProduct() {
                 value={formData.stock || ""}
                 onChange={handleInputChange}
                 InputProps={{ inputProps: { min: 0, step: 1 } }}
-                helperText="Số lượng tồn kho ban đầu"
+                helperText="Số lượng tổng (nếu không có sizes)"
               />
             </Box>
+
+            {/* Sizes Management */}
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Sizes & Stock by Size
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      sizes: [...(prev.sizes || []), { size: "", stock_quantity: 0 }],
+                    }));
+                  }}
+                >
+                  Add Size
+                </Button>
+              </Box>
+              
+              {formData.sizes && formData.sizes.length > 0 && (
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  {formData.sizes.map((sizeItem, index) => (
+                    <Box key={index} sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                      <TextField
+                        label="Size"
+                        value={sizeItem.size}
+                        onChange={(e) => {
+                          const newSizes = [...(formData.sizes || [])];
+                          newSizes[index].size = e.target.value;
+                          setFormData((prev) => ({ ...prev, sizes: newSizes }));
+                        }}
+                        placeholder="S, M, L, XL"
+                        sx={{ flex: 1 }}
+                      />
+                      <TextField
+                        label="Stock Quantity"
+                        type="number"
+                        value={sizeItem.stock_quantity}
+                        onChange={(e) => {
+                          const newSizes = [...(formData.sizes || [])];
+                          newSizes[index].stock_quantity = Number(e.target.value);
+                          setFormData((prev) => ({ ...prev, sizes: newSizes }));
+                        }}
+                        InputProps={{ inputProps: { min: 0, step: 1 } }}
+                        sx={{ flex: 1 }}
+                      />
+                      <IconButton
+                        color="error"
+                        onClick={() => {
+                          const newSizes = formData.sizes?.filter((_, i) => i !== index);
+                          setFormData((prev) => ({ ...prev, sizes: newSizes }));
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+                Nếu thêm sizes, stock sẽ được quản lý theo từng size
+              </Typography>
+            </Box>
+
+            <Divider sx={{ my: 3 }} />
+
+            {/* Colors Management */}
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Colors & Images
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      colors: [...(prev.colors || []), { color: "", image_url: "" }],
+                    }));
+                  }}
+                >
+                  Add Color
+                </Button>
+              </Box>
+              
+              {formData.colors && formData.colors.length > 0 && (
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  {formData.colors.map((colorItem, index) => (
+                    <Box key={index} sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                      <TextField
+                        label="Color"
+                        value={colorItem.color}
+                        onChange={(e) => {
+                          const newColors = [...(formData.colors || [])];
+                          newColors[index].color = e.target.value;
+                          setFormData((prev) => ({ ...prev, colors: newColors }));
+                        }}
+                        placeholder="Red, Blue, Black"
+                        sx={{ flex: 1 }}
+                      />
+                      <TextField
+                        label="Image URL"
+                        value={colorItem.image_url}
+                        onChange={(e) => {
+                          const newColors = [...(formData.colors || [])];
+                          newColors[index].image_url = e.target.value;
+                          setFormData((prev) => ({ ...prev, colors: newColors }));
+                        }}
+                        placeholder="http://example.com/red.png"
+                        sx={{ flex: 2 }}
+                      />
+                      <IconButton
+                        color="error"
+                        onClick={() => {
+                          const newColors = formData.colors?.filter((_, i) => i !== index);
+                          setFormData((prev) => ({ ...prev, colors: newColors }));
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+                Thêm các màu sắc và ảnh tương ứng cho từng màu
+              </Typography>
+            </Box>
+
+            <Divider sx={{ my: 3 }} />
 
             {/* Blurb */}
             <TextField

@@ -85,6 +85,14 @@ export interface ICreateProduct {
   description?: string;
   image_url?: string;
   sale_price?: number;
+  sizes?: Array<{
+    size: string;
+    stock_quantity: number;
+  }>;
+  colors?: Array<{
+    color: string;
+    image_url?: string;
+  }>;
 }
 
 export const createProduct = async (product: ICreateProduct) => {

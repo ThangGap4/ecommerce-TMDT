@@ -94,10 +94,11 @@ class CartService:
 
             if not product_size:
                 # Create size if not exists (for products without explicit sizes)
+                # Use product's stock as initial stock_quantity
                 product_size = ProductSize(
                     product_id=request.product_id,
                     size=request.size,
-                    stock_quantity=100
+                    stock_quantity=product.stock
                 )
                 db.add(product_size)
                 db.commit()

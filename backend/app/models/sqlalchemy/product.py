@@ -4,6 +4,7 @@ from datetime import datetime
 from app.db import Base
 from .join_tables import product_categories
 from .review import *
+from .product_color import ProductColor
 
 class Product(Base):
     __tablename__ = 'products'
