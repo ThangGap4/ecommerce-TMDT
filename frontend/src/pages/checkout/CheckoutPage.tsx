@@ -97,9 +97,13 @@ const CheckoutPage: React.FC = () => {
     
     // Check stock availability
     if (cart?.items && cart.items.length > 0) {
-      const outOfStockItems = cart.items.filter((item: any) => (item.product?.stock || 0) < item.quantity);
+      const outOfStockItems = cart.items.filter((item: any) => {
+        // Check size stock first if available, otherwise check product stock
+        const availableStock = item.product_size_info?.stock_quantity ?? item.product?.stock ?? 0;
+        return availableStock < item.quantity;
+      });
       if (outOfStockItems.length > 0) {
-        const itemNames = outOfStockItems.map((item: any) => item.product?.product_name).join(', ');
+        const itemNames = outOfStockItems.map((item: any) => item.product_name).join(', ');
         setError(`Out of stock: ${itemNames}`);
         return;
       }

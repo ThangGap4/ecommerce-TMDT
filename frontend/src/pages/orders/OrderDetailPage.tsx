@@ -39,6 +39,7 @@ const OrderDetailPage: React.FC = () => {
   const [order, setOrder] = useState<IOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (orderId) {
@@ -56,6 +57,29 @@ const OrderDetailPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!order || !window.confirm('Are you sure you want to cancel this order?')) {
+      return;
+    }
+
+    setCancelling(true);
+    try {
+      const updatedOrder = await orderService.cancelOrder(order.id);
+      setOrder(updatedOrder);
+      alert('Order cancelled successfully!');
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.detail || 'Failed to cancel order';
+      alert(errorMsg);
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const canCancelOrder = () => {
+    if (!order) return false;
+    return order.status === 'pending' || order.status === 'confirmed';
   };
 
   const formatDate = (dateStr: string) => {
@@ -223,6 +247,20 @@ const OrderDetailPage: React.FC = () => {
                   Order placed: {formatDate(order.created_at)}
                 </Typography>
               </Box>
+            )}
+
+            {/* Cancel Order Button */}
+            {canCancelOrder() && (
+              <Button
+                variant="outlined"
+                color="error"
+                fullWidth
+                onClick={handleCancelOrder}
+                disabled={cancelling}
+                sx={{ mt: 2 }}
+              >
+                {cancelling ? 'Cancelling...' : 'Cancel Order'}
+              </Button>
             )}
           </Paper>
         </Grid>

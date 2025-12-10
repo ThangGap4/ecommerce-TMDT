@@ -60,9 +60,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "frame-ancestors 'none';"
         )
         
-        # Strict Transport Security (for HTTPS - browser will enforce HTTPS)
-        # Only enable in production with HTTPS
-        # response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        # Strict Transport Security (HSTS)
+        # Force HTTPS for 1 year, include subdomains
+        if request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
         
         return response
 
@@ -104,13 +105,20 @@ app = FastAPI(
 # Security Headers Middleware (Helmet equivalent)
 app.add_middleware(SecurityHeadersMiddleware)
 
-# CORS Middleware
+# CORS Middleware - Tightened security
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins, adjust in production
+    allow_origins=[
+        "http://localhost:3000",  # React development
+        "http://localhost:3001",
+        "https://localhost:3000",  # HTTPS development
+        "https://localhost:3001",
+        # Add production domain here
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["Content-Range", "X-Total-Count"],
 )
 
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])

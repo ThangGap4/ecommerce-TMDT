@@ -64,6 +64,7 @@ class I18nKeys:
     REVIEW_DELETED = "review.deleted"
     REVIEW_NOT_FOUND = "review.not_found"
     REVIEW_ALREADY_EXISTS = "review.already_exists"
+    REVIEW_PURCHASE_REQUIRED = "review.purchase_required"
 
     # General messages
     GENERAL_SUCCESS = "general.success"

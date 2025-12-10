@@ -179,7 +179,10 @@
     "rating": "Rating",
     "comment": "Comment",
     "write_review": "Write a Review",
-    "no_reviews": "No reviews yet"
+    "no_reviews": "No reviews yet",
+    "not_found": "Review not found",
+    "already_exists": "You have already reviewed this product",
+    "purchase_required": "You must purchase and receive this product before reviewing"
   },
   "upload": {
     "success": "Upload successful",

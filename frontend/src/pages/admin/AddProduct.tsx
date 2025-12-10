@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Typography,
@@ -43,6 +43,25 @@ export default function AddProduct() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  
+  // State for color image uploads
+  const [colorImageFiles, setColorImageFiles] = useState<{ [key: number]: File }>({});
+  const [colorImagePreviews, setColorImagePreviews] = useState<{ [key: number]: string }>({});
+  const [uploadingColorIndex, setUploadingColorIndex] = useState<number | null>(null);
+
+  // Auto-calculate total stock from sizes
+  useEffect(() => {
+    if (formData.sizes && formData.sizes.length > 0) {
+      const totalStock = formData.sizes.reduce((sum, sizeItem) => {
+        return sum + (sizeItem.stock_quantity || 0);
+      }, 0);
+      
+      setFormData((prev) => ({
+        ...prev,
+        stock: totalStock,
+      }));
+    }
+  }, [formData.sizes]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -86,6 +105,43 @@ export default function AddProduct() {
     }
 
     setUploading(false);
+  };
+
+  // Handle color image selection
+  const handleColorImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setColorImageFiles((prev) => ({ ...prev, [index]: file }));
+      setColorImagePreviews((prev) => ({ ...prev, [index]: URL.createObjectURL(file) }));
+    }
+  };
+
+  // Handle color image upload
+  const handleUploadColorImage = async (index: number) => {
+    const file = colorImageFiles[index];
+    if (!file) return;
+
+    setUploadingColorIndex(index);
+    setError("");
+
+    const result = await uploadProductImage(file);
+    
+    if (result && result.url) {
+      const newColors = [...(formData.colors || [])];
+      newColors[index].image_url = result.url;
+      setFormData((prev) => ({ ...prev, colors: newColors }));
+      
+      // Clear the file after upload
+      setColorImageFiles((prev) => {
+        const updated = { ...prev };
+        delete updated[index];
+        return updated;
+      });
+    } else {
+      setError("Failed to upload color image");
+    }
+
+    setUploadingColorIndex(null);
   };
 
   const generateSlug = () => {
@@ -134,6 +190,8 @@ export default function AddProduct() {
       });
       setImageFile(null);
       setImagePreview("");
+      setColorImageFiles({});
+      setColorImagePreviews({});
     } else {
       setError("Failed to create product");
     }
@@ -235,8 +293,16 @@ export default function AddProduct() {
                 type="number"
                 value={formData.stock || ""}
                 onChange={handleInputChange}
-                InputProps={{ inputProps: { min: 0, step: 1 } }}
-                helperText="Số lượng tổng (nếu không có sizes)"
+                InputProps={{ 
+                  inputProps: { min: 0, step: 1 },
+                  readOnly: formData.sizes && formData.sizes.length > 0,
+                }}
+                helperText={
+                  formData.sizes && formData.sizes.length > 0
+                    ? "Tự tính từ tổng stock các sizes"
+                    : "Số lượng tổng (nếu không có sizes)"
+                }
+                disabled={formData.sizes && formData.sizes.length > 0}
               />
             </Box>
 
@@ -332,34 +398,80 @@ export default function AddProduct() {
               {formData.colors && formData.colors.length > 0 && (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   {formData.colors.map((colorItem, index) => (
-                    <Box key={index} sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-                      <TextField
-                        label="Color"
-                        value={colorItem.color}
-                        onChange={(e) => {
-                          const newColors = [...(formData.colors || [])];
-                          newColors[index].color = e.target.value;
-                          setFormData((prev) => ({ ...prev, colors: newColors }));
-                        }}
-                        placeholder="Red, Blue, Black"
-                        sx={{ flex: 1 }}
-                      />
-                      <TextField
-                        label="Image URL"
-                        value={colorItem.image_url}
-                        onChange={(e) => {
-                          const newColors = [...(formData.colors || [])];
-                          newColors[index].image_url = e.target.value;
-                          setFormData((prev) => ({ ...prev, colors: newColors }));
-                        }}
-                        placeholder="http://example.com/red.png"
-                        sx={{ flex: 2 }}
-                      />
+                    <Box key={index} sx={{ display: "flex", gap: 2, alignItems: "flex-start", p: 2, border: "1px solid #e0e0e0", borderRadius: 1 }}>
+                      <Box sx={{ flex: 1 }}>
+                        <TextField
+                          fullWidth
+                          label="Color"
+                          value={colorItem.color}
+                          onChange={(e) => {
+                            const newColors = [...(formData.colors || [])];
+                            newColors[index].color = e.target.value;
+                            setFormData((prev) => ({ ...prev, colors: newColors }));
+                          }}
+                          placeholder="Red, Blue, Black"
+                          sx={{ mb: 2 }}
+                        />
+                        
+                        {/* File input for color image */}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleColorImageChange(index, e)}
+                          style={{ marginBottom: "8px", display: "block" }}
+                        />
+                        
+                        {colorImageFiles[index] && !colorItem.image_url && (
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => handleUploadColorImage(index)}
+                            disabled={uploadingColorIndex === index}
+                            sx={{ mt: 1 }}
+                          >
+                            {uploadingColorIndex === index ? <CircularProgress size={20} /> : "Upload Image"}
+                          </Button>
+                        )}
+                        
+                        {colorItem.image_url && (
+                          <Alert severity="success" sx={{ mt: 1 }}>
+                            Image uploaded
+                          </Alert>
+                        )}
+                      </Box>
+                      
+                      {/* Image preview */}
+                      {(colorImagePreviews[index] || colorItem.image_url) && (
+                        <Box
+                          component="img"
+                          src={colorImagePreviews[index] || colorItem.image_url}
+                          alt={`${colorItem.color} preview`}
+                          sx={{
+                            width: 80,
+                            height: 80,
+                            objectFit: "cover",
+                            borderRadius: 1,
+                            border: "1px solid #ddd",
+                          }}
+                        />
+                      )}
+                      
                       <IconButton
                         color="error"
                         onClick={() => {
                           const newColors = formData.colors?.filter((_, i) => i !== index);
                           setFormData((prev) => ({ ...prev, colors: newColors }));
+                          // Clear color image files/previews for this index
+                          setColorImageFiles((prev) => {
+                            const updated = { ...prev };
+                            delete updated[index];
+                            return updated;
+                          });
+                          setColorImagePreviews((prev) => {
+                            const updated = { ...prev };
+                            delete updated[index];
+                            return updated;
+                          });
                         }}
                       >
                         <DeleteIcon />

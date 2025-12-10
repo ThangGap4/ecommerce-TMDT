@@ -9,6 +9,16 @@ export interface IProduct {
   stock: number;
   image_url: string;
   slug?: string;
+  sizes?: Array<{
+    size: string;
+    stock_quantity: number;
+    size_id: number;
+  }>;
+  colors?: Array<{
+    id: number;
+    color: string;
+    image_url?: string;
+  }>;
 }
 
 export class Product implements IProduct {
@@ -22,6 +32,16 @@ export class Product implements IProduct {
   stock: number;
   image_url: string;
   slug?: string;
+  sizes?: Array<{
+    size: string;
+    stock_quantity: number;
+    size_id: number;
+  }>;
+  colors?: Array<{
+    id: number;
+    color: string;
+    image_url?: string;
+  }>;
 
   constructor(product: any) {
     this.id = product.id;
@@ -34,6 +54,8 @@ export class Product implements IProduct {
     this.stock = product.stock;
     this.image_url = product.image_url;
     this.slug = product.slug;
+    this.sizes = product.sizes || [];
+    this.colors = product.colors || [];
   }
 }
 

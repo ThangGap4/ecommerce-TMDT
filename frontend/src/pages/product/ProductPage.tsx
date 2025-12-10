@@ -3,7 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { getProductInfo } from "../../services/Product";
+import { getProductReviews, createProductReview, IReviewListResponse, ICreateReview } from "../../services/Review";
 import { useCurrency } from "../../context/CurrencyContext";
+import { useAuth } from "../../context/AuthContext";
 
 import AddToCart from "../../components/ui/buttons/AddToCart/AddToCart";
 import RadioProduct from "../../components/ui/buttons/RadioProduct/RadioProduct";
@@ -24,6 +26,8 @@ import {
   Tabs,
   Tab,
   Avatar,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import {
   Home,
@@ -39,32 +43,133 @@ import { getImageUrl } from "../../utils/imageUtils";
 import { Product } from "../../types/types";
 
 export default function ProductPage() {
-  const { productID } = useParams();
+  const { productSlug } = useParams();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { formatPrice } = useCurrency();
+  const { isLoggedIn } = useAuth();
   const [productInfo, setProductInfo] = useState<Product>();
-  const [color, setColor] = useState<string>("red");
-  const [size, setSize] = useState<string>("s");
+  const [color, setColor] = useState<string>("");
+  const [size, setSize] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedImage, setSelectedImage] = useState<number>(0);
   const [tabValue, setTabValue] = useState(0);
+  
+  // Review states
+  const [reviews, setReviews] = useState<IReviewListResponse | null>(null);
+  const [reviewRating, setReviewRating] = useState<number>(5);
+  const [reviewContent, setReviewContent] = useState<string>("");
+  const [submittingReview, setSubmittingReview] = useState<boolean>(false);
+  const [reviewError, setReviewError] = useState<string>("");
+  const [reviewSuccess, setReviewSuccess] = useState<boolean>(false);
 
-  // Mock multiple images
-  const productImages = productInfo ? [productInfo.image_url, productInfo.image_url, productInfo.image_url] : [];
+  // Get product images: main image + color images
+  const productImages = React.useMemo(() => {
+    if (!productInfo) return [];
+    const images = [productInfo.image_url];
+    if (productInfo.colors && productInfo.colors.length > 0) {
+      productInfo.colors.forEach(c => {
+        if (c.image_url) images.push(c.image_url);
+      });
+    }
+    return images;
+  }, [productInfo]);
+
+  // Get current color image
+  const currentColorImage = React.useMemo(() => {
+    if (!productInfo?.colors || !color) return productInfo?.image_url;
+    const selectedColor = productInfo.colors.find(c => c.color.toLowerCase() === color.toLowerCase());
+    return selectedColor?.image_url || productInfo.image_url;
+  }, [productInfo, color]);
 
   React.useEffect(() => {
     const fetchProduct = async () => {
-      if (productID) {
-        const response = await getProductInfo(productID);
+      if (productSlug) {
+        const response = await getProductInfo(productSlug);
         const product = new Product(response);
         setProductInfo(product);
+        
+        // Set default color and size
+        if (product.colors && product.colors.length > 0) {
+          setColor(product.colors[0].color);
+        }
+        if (product.sizes && product.sizes.length > 0) {
+          setSize(product.sizes[0].size);
+        }
+        
+        // Fetch reviews
+        if (product.slug) {
+          const reviewData = await getProductReviews(product.slug);
+          setReviews(reviewData);
+        }
+        
         setLoading(false);
       }
     };
 
     fetchProduct();
-  }, [productID]);
+  }, [productSlug]);
+
+  // Update main image when color changes
+  React.useEffect(() => {
+    if (color && productInfo?.colors) {
+      const colorIndex = productInfo.colors.findIndex(c => c.color.toLowerCase() === color.toLowerCase());
+      if (colorIndex !== -1 && productInfo.colors[colorIndex].image_url) {
+        // Set to color image (index 1+ in productImages array)
+        setSelectedImage(colorIndex + 1);
+      } else {
+        // Fallback to main image
+        setSelectedImage(0);
+      }
+    }
+  }, [color, productInfo]);
+
+  // Handle review submission
+  const handleSubmitReview = async () => {
+    if (!isLoggedIn) {
+      setReviewError("Please login to submit a review");
+      return;
+    }
+
+    if (!reviewContent.trim()) {
+      setReviewError("Please write a review");
+      return;
+    }
+
+    if (!productInfo?.slug) return;
+
+    setSubmittingReview(true);
+    setReviewError("");
+    setReviewSuccess(false);
+
+    try {
+      const newReview: ICreateReview = {
+        content: reviewContent,
+        rating: reviewRating,
+      };
+
+      await createProductReview(productInfo.slug, newReview);
+
+      // Refresh reviews
+      const reviewData = await getProductReviews(productInfo.slug);
+      setReviews(reviewData);
+
+      // Reset form
+      setReviewContent("");
+      setReviewRating(5);
+      setReviewSuccess(true);
+
+      // Clear success message after 3s
+      setTimeout(() => setReviewSuccess(false), 3000);
+    } catch (err: any) {
+      // Try to get translated error message
+      const errorDetail = err.message || "Failed to submit review";
+      const translatedError = t(errorDetail, { defaultValue: errorDetail });
+      setReviewError(translatedError);
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   const discountPercent = productInfo?.sale_price
     ? Math.round(((productInfo.price - productInfo.sale_price) / productInfo.price) * 100)
@@ -137,7 +242,7 @@ export default function ProductPage() {
                     }}
                   >
                     <img
-                      src={getImageUrl(productImages[selectedImage])}
+                      src={getImageUrl(currentColorImage || productImages[selectedImage])}
                       alt={productInfo.product_name}
                       style={{
                         width: "100%",
@@ -247,20 +352,30 @@ export default function ProductPage() {
                   <Divider sx={{ my: 3 }} />
 
                   {/* Color Selection */}
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
-                      {t("product.color")}: <span style={{ fontWeight: 400 }}>{color}</span>
-                    </Typography>
-                    <RadioProduct value={["Red", "Black", "Green", "White"]} setState={setColor} />
-                  </Box>
+                  {productInfo.colors && productInfo.colors.length > 0 && (
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+                        {t("product.color")}: <span style={{ fontWeight: 400 }}>{color}</span>
+                      </Typography>
+                      <RadioProduct 
+                        value={productInfo.colors.map(c => c.color)} 
+                        setState={setColor} 
+                      />
+                    </Box>
+                  )}
 
                   {/* Size Selection */}
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
-                      {t("product.size")}: <span style={{ fontWeight: 400 }}>{size.toUpperCase()}</span>
-                    </Typography>
-                    <RadioProduct value={["S", "M", "L", "XL"]} setState={setSize} />
-                  </Box>
+                  {productInfo.sizes && productInfo.sizes.length > 0 && (
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+                        {t("product.size")}: <span style={{ fontWeight: 400 }}>{size.toUpperCase()}</span>
+                      </Typography>
+                      <RadioProduct 
+                        value={productInfo.sizes.map(s => s.size)} 
+                        setState={setSize} 
+                      />
+                    </Box>
+                  )}
 
                   <Divider sx={{ my: 3 }} />
 
@@ -296,7 +411,7 @@ export default function ProductPage() {
                 sx={{ borderBottom: "1px solid #eee", px: 3 }}
               >
                 <Tab label={t("product.description")} />
-                <Tab label={`${t("review.title")} (128)`} />
+                <Tab label={`${t("review.title")} (${reviews?.total_reviews || 0})`} />
               </Tabs>
 
               <Box sx={{ p: 3 }}>
@@ -317,47 +432,92 @@ export default function ProductPage() {
                       <Typography variant="h6" fontWeight={600} gutterBottom>
                         {t("review.write_review")}
                       </Typography>
+                      
+                      {reviewSuccess && (
+                        <Alert severity="success" sx={{ mb: 2 }}>
+                          Review submitted successfully!
+                        </Alert>
+                      )}
+                      
+                      {reviewError && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                          {reviewError}
+                        </Alert>
+                      )}
+                      
                       <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
                         <Typography>{t("review.rating")}:</Typography>
-                        <Rating size="large" />
+                        <Rating 
+                          size="large" 
+                          value={reviewRating}
+                          onChange={(_, newValue) => setReviewRating(newValue || 5)}
+                        />
                       </Box>
                       <TextField
                         multiline
                         rows={4}
                         placeholder={t("review.comment")}
                         fullWidth
+                        value={reviewContent}
+                        onChange={(e) => setReviewContent(e.target.value)}
                         sx={{ mb: 2 }}
                       />
-                      <Button variant="contained" sx={{ textTransform: "none" }}>
-                        {t("common.submit")}
+                      <Button 
+                        variant="contained" 
+                        sx={{ textTransform: "none" }}
+                        onClick={handleSubmitReview}
+                        disabled={submittingReview || !reviewContent.trim()}
+                      >
+                        {submittingReview ? <CircularProgress size={24} /> : t("common.submit")}
                       </Button>
                     </Box>
 
                     <Divider sx={{ my: 3 }} />
 
-                    {/* Mock Reviews */}
-                    <Typography variant="h6" fontWeight={600} gutterBottom>
-                      Customer Reviews
-                    </Typography>
-                    {[1, 2, 3].map((review) => (
-                      <Box key={review} sx={{ py: 2, borderBottom: "1px solid #eee" }}>
-                        <Box sx={{ display: "flex", gap: 2 }}>
-                          <Avatar>U</Avatar>
-                          <Box sx={{ flex: 1 }}>
-                            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-                              <Typography fontWeight={600}>User {review}</Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                2 days ago
+                    {/* Reviews List */}
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                      <Typography variant="h6" fontWeight={600}>
+                        Customer Reviews
+                      </Typography>
+                      {reviews && (
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          <Rating value={reviews.average_rating} precision={0.1} readOnly size="small" />
+                          <Typography variant="body2" color="text.secondary">
+                            ({reviews.total_reviews} {reviews.total_reviews === 1 ? 'review' : 'reviews'})
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                    
+                    {reviews && reviews.reviews.length > 0 ? (
+                      reviews.reviews.map((review) => (
+                        <Box key={review.id} sx={{ py: 2, borderBottom: "1px solid #eee" }}>
+                          <Box sx={{ display: "flex", gap: 2 }}>
+                            <Avatar>
+                              {review.author.display_name?.[0] || review.author.email[0].toUpperCase()}
+                            </Avatar>
+                            <Box sx={{ flex: 1 }}>
+                              <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                                <Typography fontWeight={600}>
+                                  {review.author.display_name || review.author.email}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {new Date(review.created_at).toLocaleDateString()}
+                                </Typography>
+                              </Box>
+                              <Rating value={review.rating} size="small" readOnly sx={{ mb: 1 }} />
+                              <Typography color="text.secondary">
+                                {review.content}
                               </Typography>
                             </Box>
-                            <Rating value={5} size="small" readOnly sx={{ mb: 1 }} />
-                            <Typography color="text.secondary">
-                              Great product! Exactly as described. Fast shipping and excellent quality.
-                            </Typography>
                           </Box>
                         </Box>
-                      </Box>
-                    ))}
+                      ))
+                    ) : (
+                      <Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>
+                        No reviews yet. Be the first to review this product!
+                      </Typography>
+                    )}
                   </Box>
                 )}
               </Box>

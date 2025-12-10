@@ -47,6 +47,15 @@ class CartService:
                 total_price = unit_price * item.quantity
                 subtotal += total_price
                 
+                # Build product_size_info if available
+                from app.schemas.cart_schemas import ProductSizeInfo
+                product_size_info = None
+                if item.product_size:
+                    product_size_info = ProductSizeInfo(
+                        size=item.product_size.size,
+                        stock_quantity=item.product_size.stock_quantity
+                    )
+                
                 items.append(CartItemBase(
                     id=item.id,
                     product_id=item.product_id,
@@ -54,6 +63,7 @@ class CartService:
                     product_image=product.image_url if product else None,
                     product_slug=product.slug if product else None,
                     product_size=item.product_size.size if item.product_size else "",
+                    product_size_info=product_size_info,
                     quantity=item.quantity,
                     unit_price=unit_price,
                     total_price=total_price

@@ -33,6 +33,12 @@ def get_order_detail(order_id: int, current_user: User = Depends(require_user)):
     return OrderService.get_order_detail(str(current_user.uuid), order_id)
 
 
+@order_router.post("/orders/{order_id}/cancel", response_model=OrderResponse)
+def cancel_order(order_id: int, current_user: User = Depends(require_user)):
+    """Cancel order (only if status is Pending or Confirmed)"""
+    return OrderService.user_cancel_order(str(current_user.uuid), order_id)
+
+
 # =====================
 # Admin Endpoints
 # =====================

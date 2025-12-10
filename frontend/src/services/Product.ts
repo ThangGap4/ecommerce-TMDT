@@ -1,8 +1,8 @@
 import { BACKEND_URL } from "../constants";
 
-export const getProductInfo = async (productID: string) => {
+export const getProductInfo = async (productSlug: string) => {
   try {
-    const response = await fetch(`${BACKEND_URL}/products/${productID}`).then(
+    const response = await fetch(`${BACKEND_URL}/products/${productSlug}`).then(
       (res) => {
         if (res.ok) {
           return res.json();

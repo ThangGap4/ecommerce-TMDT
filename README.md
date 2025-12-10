@@ -6,11 +6,13 @@ This is an e-commerce project built using React as the frontend, MaterialUI and 
 ## Technologies Used
 - **Frontend**: React, MaterialUI, Tailwind CSS
 - **Backend**: FastAPI (Python)
-- **Database**: PostgreSQL
+- **Database**: PostgreSQL with Redis caching
 - **Containerization**: Docker
 - **CI/CD**: GitHub Actions, Docker Hub
 - **Reverse Proxy**: Nginx
 - **Automatic Updates**: Watchtower
+- **🔐 Security**: bcrypt, JWT, HTTPS, Security Headers (Helmet equivalent)
+- **💳 Payment**: Stripe (test mode)
 
 ## Features
 - **User Registration and Authentication**: Customers can register and log in to the platform.
@@ -18,6 +20,9 @@ This is an e-commerce project built using React as the frontend, MaterialUI and 
 - **Shopping Cart**: Customers can add products to their cart and proceed to checkout.
 - **Order Management**: Customers can view their order history and track the status of their orders.
 - **Admin Panel**: Admins can manage products, orders, and user accounts.
+- **🔒 Security**: Full security implementation (HTTPS, security headers, bcrypt, JWT, CORS)
+- **💳 Payment Integration**: Stripe test mode with webhook handling
+- **📧 Email Verification**: Password reset with token expiry
 
 ## Architecture Overview
 - **Frontend**: The frontend is built using React, with MaterialUI and Tailwind CSS for styling. It communicates with the backend API using HTTP requests.

@@ -63,7 +63,7 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/products" element={<Products />} />
-              <Route path="/products/:productID/" element={<ProductPage />} />
+              <Route path="/products/:productSlug/" element={<ProductPage />} />
               
               {/* User routes - Protected */}
               <Route

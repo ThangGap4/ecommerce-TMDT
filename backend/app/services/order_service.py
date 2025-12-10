@@ -354,6 +354,45 @@ class OrderService:
             db.close()
     
     @staticmethod
+    def user_cancel_order(user_id: str, order_id: int) -> OrderResponse:
+        """Cancel order by user (only if status is Pending or Confirmed)"""
+        db = get_db_session()
+        try:
+            # Get order and verify ownership
+            order = db.query(Order).options(
+                joinedload(Order.items)
+            ).filter(
+                Order.id == order_id,
+                Order.user_id == user_id
+            ).first()
+            
+            if not order:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=I18nKeys.ORDER_NOT_FOUND
+                )
+            
+            # Only allow cancel if order is Pending or Confirmed
+            if order.status not in [OrderStatus.PENDING.value, OrderStatus.CONFIRMED.value]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cannot cancel order that has been shipped or delivered"
+                )
+            
+            # Rollback stock if order was confirmed (stock was deducted)
+            if order.status == OrderStatus.CONFIRMED.value:
+                OrderService.rollback_stock_on_cancel(order_id)
+            
+            # Update status to cancelled
+            order.status = OrderStatus.CANCELLED.value
+            db.commit()
+            db.refresh(order)
+            
+            return OrderService.get_order_detail(user_id, order_id)
+        finally:
+            db.close()
+
+    @staticmethod
     def admin_update_order_status(order_id: int, new_status: str) -> OrderResponse:
         """Update order status (admin only)"""
         # Validate status
@@ -406,14 +445,33 @@ class OrderService:
             # Deduct stock for each item
             for item in order.items:
                 product = db.query(Product).filter(Product.id == item.product_id).first()
-                if product:
+                if not product:
+                    print(f"[Stock Deduction] Product {item.product_id} not found")
+                    continue
+                
+                # Check if item has size - deduct from size stock if exists
+                if item.product_size:
+                    # Deduct from size-level stock
+                    product_size = db.query(ProductSize).filter(
+                        ProductSize.product_id == product.id,
+                        ProductSize.size == item.product_size
+                    ).first()
+                    
+                    if product_size:
+                        if product_size.stock_quantity >= item.quantity:
+                            product_size.stock_quantity -= item.quantity
+                            print(f"[Stock Deduction] Deducted {item.quantity} from {product.product_name} size {item.product_size}, remaining: {product_size.stock_quantity}")
+                        else:
+                            print(f"[Stock Deduction] Insufficient size stock for {product.product_name} size {item.product_size}: has {product_size.stock_quantity}, need {item.quantity}")
+                    else:
+                        print(f"[Stock Deduction] Size {item.product_size} not found for product {product.product_name}")
+                else:
+                    # No size - deduct from product-level stock
                     if product.stock >= item.quantity:
                         product.stock -= item.quantity
                         print(f"[Stock Deduction] Deducted {item.quantity} from product {product.product_name}, remaining: {product.stock}")
                     else:
                         print(f"[Stock Deduction] Insufficient stock for product {product.product_name}: has {product.stock}, need {item.quantity}")
-                else:
-                    print(f"[Stock Deduction] Product {item.product_id} not found")
             
             db.commit()
         except Exception as e:
@@ -439,11 +497,27 @@ class OrderService:
             # Add back stock for each item
             for item in order.items:
                 product = db.query(Product).filter(Product.id == item.product_id).first()
-                if product:
+                if not product:
+                    print(f"[Stock Rollback] Product {item.product_id} not found")
+                    continue
+                
+                # Check if item has size - add back to size stock if exists
+                if item.product_size:
+                    # Add back to size-level stock
+                    product_size = db.query(ProductSize).filter(
+                        ProductSize.product_id == product.id,
+                        ProductSize.size == item.product_size
+                    ).first()
+                    
+                    if product_size:
+                        product_size.stock_quantity += item.quantity
+                        print(f"[Stock Rollback] Added back {item.quantity} to {product.product_name} size {item.product_size}, now: {product_size.stock_quantity}")
+                    else:
+                        print(f"[Stock Rollback] Size {item.product_size} not found for product {product.product_name}")
+                else:
+                    # No size - add back to product-level stock
                     product.stock += item.quantity
                     print(f"[Stock Rollback] Added back {item.quantity} to product {product.product_name}, now: {product.stock}")
-                else:
-                    print(f"[Stock Rollback] Product {item.product_id} not found")
             
             db.commit()
         except Exception as e:

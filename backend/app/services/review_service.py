@@ -2,6 +2,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from app.models.sqlalchemy import Review, Product, User
+from app.models.sqlalchemy.order import Order, OrderItem, OrderStatus
 from app.schemas.review_schemas import ReviewCreate, ReviewResponse, ReviewListResponse, ReviewAuthor
 from app.db import get_db_session
 from fastapi import HTTPException
@@ -37,6 +38,19 @@ class ReviewService:
         product = db.query(Product).filter(Product.slug == product_slug).first()
         if not product:
             raise HTTPException(status_code=404, detail=I18nKeys.PRODUCT_NOT_FOUND)
+        
+        # Check if user has purchased and received this product
+        has_purchased = db.query(Order).join(OrderItem).filter(
+            Order.user_id == user_id,
+            OrderItem.product_id == product.id,
+            Order.status == OrderStatus.DELIVERED.value
+        ).first()
+        
+        if not has_purchased:
+            raise HTTPException(
+                status_code=403, 
+                detail=I18nKeys.REVIEW_PURCHASE_REQUIRED
+            )
         
         # Check if user already reviewed this product
         existing_review = db.query(Review).filter(

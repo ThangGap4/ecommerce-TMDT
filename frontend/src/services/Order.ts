@@ -67,6 +67,12 @@ export const getOrderDetail = async (orderId: number): Promise<IOrder> => {
   return response.data;
 };
 
+// Cancel order (user can cancel if status is Pending or Confirmed)
+export const cancelOrder = async (orderId: number): Promise<IOrder> => {
+  const response = await api.post(`/orders/${orderId}/cancel`);
+  return response.data;
+};
+
 // =====================
 // Admin APIs
 // =====================
@@ -122,6 +128,7 @@ export const orderService = {
   createOrder,
   getMyOrders,
   getOrderDetail,
+  cancelOrder,
   adminGetOrders,
   adminGetOrderDetail,
   adminUpdateOrderStatus,

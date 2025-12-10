@@ -165,7 +165,7 @@ export default function FlashDeals({ products, endTime }: FlashDealsProps) {
             <Paper
               key={product.id}
               component={Link}
-              to={`/products/${product.id}`}
+              to={`/products/${product.slug}`}
               sx={{
                 minWidth: { xs: 140, sm: 180 },
                 maxWidth: { xs: 140, sm: 180 },

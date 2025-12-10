@@ -8,17 +8,30 @@ import {
   IconButton,
   Slide,
   CircularProgress,
+  Card,
+  CardContent,
+  Button,
+  Chip,
 } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
 import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import { useTranslation } from "react-i18next";
-import ChatService, { ChatMessage } from "../services/Chat";
+import { useNavigate } from "react-router-dom";
+import ChatService, { ChatMessage, ProductSuggestion } from "../services/Chat";
+
+interface MessageWithProducts {
+  role: "user" | "assistant";
+  content: string;
+  products?: ProductSuggestion[];
+}
 
 export default function ChatWidget() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<MessageWithProducts[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -31,15 +44,29 @@ export default function ChatWidget() {
   const handleSend = async () => {
     if (!input.trim() || loading) return;
 
-    const userMessage: ChatMessage = { role: "user", content: input.trim() };
+    const userMessage: MessageWithProducts = { role: "user", content: input.trim() };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput("");
     setLoading(true);
 
     try {
-      const response = await ChatService.sendMessage(newMessages);
-      setMessages((prev) => [...prev, { role: "assistant", content: response }]);
+      // Convert to ChatMessage format for API
+      const apiMessages: ChatMessage[] = newMessages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
+      const response = await ChatService.sendMessage(apiMessages);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: response.message,
+          products: response.products,
+        },
+      ]);
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -58,6 +85,11 @@ export default function ChatWidget() {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleProductClick = (slug: string) => {
+    navigate(`/products/${slug}`);
+    setOpen(false);
   };
 
   return (
@@ -91,7 +123,12 @@ export default function ChatWidget() {
               alignItems: "center",
             }}
           >
-            <Typography variant="h6">{t("chat.title", "Support Chat")}</Typography>
+            <Box>
+              <Typography variant="h6">Shopping Assistant</Typography>
+              <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                Powered by AI
+              </Typography>
+            </Box>
             <IconButton size="small" onClick={() => setOpen(false)} sx={{ color: "white" }}>
               <CloseIcon />
             </IconButton>
@@ -105,39 +142,127 @@ export default function ChatWidget() {
               p: 2,
               display: "flex",
               flexDirection: "column",
-              gap: 1,
+              gap: 2,
               bgcolor: "#f5f5f5",
             }}
           >
             {messages.length === 0 && (
-              <Typography color="text.secondary" textAlign="center" sx={{ mt: 4 }}>
-                {t("chat.welcome", "Hi! How can we help you today?")}
-              </Typography>
+              <Box sx={{ textAlign: "center", mt: 4 }}>
+                <Typography color="text.secondary" variant="body1" sx={{ mb: 2 }}>
+                  Hi! I'm your shopping assistant 👋
+                </Typography>
+                <Typography color="text.secondary" variant="body2">
+                  Ask me about products, recommendations, or help with your order!
+                </Typography>
+              </Box>
             )}
 
             {messages.map((msg, idx) => (
-              <Box
-                key={idx}
-                sx={{
-                  alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-                  maxWidth: "80%",
-                }}
-              >
-                <Paper
-                  elevation={1}
+              <Box key={idx}>
+                {/* Message Bubble */}
+                <Box
                   sx={{
-                    p: 1.5,
-                    bgcolor: msg.role === "user" ? "primary.main" : "white",
-                    color: msg.role === "user" ? "white" : "text.primary",
-                    borderRadius: 2,
-                    borderBottomRightRadius: msg.role === "user" ? 0 : 2,
-                    borderBottomLeftRadius: msg.role === "assistant" ? 0 : 2,
+                    display: "flex",
+                    justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
                   }}
                 >
-                  <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
-                    {msg.content}
-                  </Typography>
-                </Paper>
+                  <Paper
+                    elevation={1}
+                    sx={{
+                      maxWidth: "80%",
+                      p: 1.5,
+                      bgcolor: msg.role === "user" ? "primary.main" : "white",
+                      color: msg.role === "user" ? "white" : "text.primary",
+                      borderRadius: 2,
+                      borderBottomRightRadius: msg.role === "user" ? 0 : 2,
+                      borderBottomLeftRadius: msg.role === "assistant" ? 0 : 2,
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+                      {msg.content}
+                    </Typography>
+                  </Paper>
+                </Box>
+
+                {/* Product Suggestions */}
+                {msg.role === "assistant" && msg.products && msg.products.length > 0 && (
+                  <Box sx={{ mt: 1.5, ml: 1 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: "block" }}>
+                      Product Suggestions:
+                    </Typography>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                      {msg.products.map((product, pIdx) => (
+                        <Card
+                          key={pIdx}
+                          elevation={2}
+                          sx={{
+                            cursor: "pointer",
+                            transition: "all 0.2s",
+                            "&:hover": {
+                              transform: "translateY(-2px)",
+                              boxShadow: 4,
+                            },
+                          }}
+                          onClick={() => handleProductClick(product.slug)}
+                        >
+                          <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
+                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "start", mb: 0.5 }}>
+                              <Typography variant="subtitle2" fontWeight={600} sx={{ flex: 1 }}>
+                                {product.name}
+                              </Typography>
+                              {product.on_sale && (
+                                <Chip
+                                  label="SALE"
+                                  size="small"
+                                  color="error"
+                                  sx={{ height: 18, fontSize: "0.65rem" }}
+                                />
+                              )}
+                            </Box>
+                            
+                            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                              {product.category}
+                            </Typography>
+
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                              <Typography variant="body2" fontWeight={600} color="primary">
+                                ${product.price.toFixed(2)}
+                              </Typography>
+                              {product.original_price && (
+                                <Typography
+                                  variant="caption"
+                                  sx={{ textDecoration: "line-through", color: "text.secondary" }}
+                                >
+                                  ${product.original_price.toFixed(2)}
+                                </Typography>
+                              )}
+                            </Box>
+
+                            {product.description && (
+                              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+                                {product.description.substring(0, 60)}...
+                              </Typography>
+                            )}
+
+                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <Typography variant="caption" color={product.stock > 0 ? "success.main" : "error.main"}>
+                                {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+                              </Typography>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                endIcon={<LocalOfferIcon />}
+                                sx={{ fontSize: "0.7rem", py: 0.3 }}
+                              >
+                                View
+                              </Button>
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </Box>
+                  </Box>
+                )}
               </Box>
             ))}
 
@@ -158,21 +283,20 @@ export default function ChatWidget() {
               <TextField
                 fullWidth
                 size="small"
-                placeholder={t("chat.placeholder", "Type a message...")}
+                placeholder="Ask me anything..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 disabled={loading}
                 autoComplete="off"
               />
-              <IconButton
-                color="primary"
-                onClick={handleSend}
-                disabled={!input.trim() || loading}
-              >
+              <IconButton color="primary" onClick={handleSend} disabled={!input.trim() || loading}>
                 <SendIcon />
               </IconButton>
             </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5, textAlign: "center" }}>
+              Try: "Show me blue tops" or "Recommend shoes under $50"
+            </Typography>
           </Box>
         </Paper>
       </Slide>

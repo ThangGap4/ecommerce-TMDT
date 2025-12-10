@@ -177,7 +177,10 @@
     "rating": "Xếp hạng",
     "comment": "Bình luận",
     "write_review": "Viết đánh giá",
-    "no_reviews": "Chưa có đánh giá"
+    "no_reviews": "Chưa có đánh giá",
+    "not_found": "Không tìm thấy đánh giá",
+    "already_exists": "Bạn đã đánh giá sản phẩm này rồi",
+    "purchase_required": "Bạn phải mua và nhận hàng trước khi đánh giá"
   },
   "upload": {
     "success": "Tải lên thành công",
