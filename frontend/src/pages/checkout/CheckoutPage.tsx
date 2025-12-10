@@ -23,6 +23,7 @@ import { useCart } from '../../context/CartContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { orderService } from '../../services/Order';
 import { paymentService } from '../../services/Payment';
+import FDADisclaimer from '../../components/shared/FDADisclaimer';
 
 interface ShippingForm {
   name: string;
@@ -227,6 +228,11 @@ const CheckoutPage: React.FC = () => {
                   />
                 </Grid>
               </Grid>
+
+              {/* FDA Health Warning for Supplements */}
+              <Box sx={{ mt: 3 }}>
+                <FDADisclaimer variant="banner" severity="warning" />
+              </Box>
 
               <Box sx={{ mt: 4 }}>
                 <Button

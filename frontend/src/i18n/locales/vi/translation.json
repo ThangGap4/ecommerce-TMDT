@@ -88,6 +88,7 @@
   "product": {
     "title": "Sản phẩm",
     "not_found": "Không tìm thấy sản phẩm",
+    "no_products": "Chưa có sản phẩm nào",
     "created": "Sản phẩm đã được tạo",
     "updated": "Sản phẩm đã được cập nhật",
     "deleted": "Sản phẩm đã được xóa",
@@ -106,10 +107,11 @@
     "add_to_cart": "Thêm vào giỏ",
     "buy_now": "Mua ngay",
     "view_details": "Xem chi tiết",
+    "view_all": "Xem tất cả sản phẩm",
     "filter_by": "Lọc theo",
     "sort_by": "Sắp xếp theo",
     "all_products": "Tất cả sản phẩm",
-    "featured": "Nổi bật",
+    "featured": "Sản phẩm nổi bật",
     "new_arrivals": "Hàng mới về",
     "items_found": "sản phẩm",
     "no_products_found": "Không tìm thấy sản phẩm",
@@ -125,10 +127,14 @@
       "reset": "Đặt lại",
       "clear_all": "Xóa tất cả",
       "all_types": "Tất cả",
-      "tops": "Áo",
-      "bottoms": "Quần",
-      "shoes": "Giày",
-      "accessories": "Phụ kiện"
+      "vitamins": "Vitamin & Khoáng chất",
+      "protein": "Protein & Thể hình",
+      "weight_management": "Quản lý Cân nặng",
+      "beauty": "Sắc đẹp & Sức khỏe",
+      "immune": "Hỗ trợ Miễn dịch",
+      "probiotics": "Probiotic & Tiêu hóa",
+      "omega3": "Omega-3 & Tim mạch",
+      "sale": "Giảm giá"
     },
     "sort": {
       "label": "Sắp xếp",
@@ -220,31 +226,51 @@
     "not_found": "Không tìm thấy",
     "forbidden": "Không có quyền truy cập",
     "bad_request": "Yêu cầu không hợp lệ",
-    "free_shipping": "Miễn phí vận chuyển với đơn hàng trên 100$"
+    "free_shipping": "Miễn phí vận chuyển đơn hàng trên 2.000.000đ - Thực phẩm chức năng được khoa học chứng minh"
   },
   "home": {
-    "hero_title": "Khám phá Phong cách Mới",
-    "hero_subtitle": "Mua sắm những bộ sưu tập mới nhất với ưu đãi độc quyền",
-    "shop_now": "Mua ngay",
-    "explore_collections": "Khám phá bộ sưu tập",
+    "hero_title": "Khám phá Sức khỏe Tốt nhất",
+    "hero_subtitle": "Thực phẩm chức năng cao cấp được khoa học chứng minh cho sức khỏe tối ưu",
+    "shop_now": "Mua thực phẩm chức năng",
+    "explore_collections": "Khám phá Sản phẩm",
     "shop_by_category": "Mua theo danh mục",
-    "new_arrivals": "Sản phẩm mới",
+    "new_arrivals": "Hàng mới về",
+    "new_arrivals_subtitle": "Vừa ra mắt",
+    "best_sellers": "Bán chạy nhất",
+    "best_sellers_subtitle": "Top sản phẩm tuần này",
     "view_all": "Xem tất cả",
     "categories": {
-      "tops": "Áo",
-      "bottoms": "Quần",
-      "shoes": "Giày",
-      "accessories": "Phụ kiện"
+      "vitamins": "Vitamin & Khoáng chất",
+      "protein": "Protein & Thể hình",
+      "weight_management": "Quản lý Cân nặng",
+      "beauty": "Sắc đẹp & Sức khỏe",
+      "immune": "Hỗ trợ Miễn dịch",
+      "probiotics": "Probiotic & Tiêu hóa",
+      "omega3": "Omega-3 & Tim mạch"
     },
     "features": {
       "free_shipping": "Miễn phí vận chuyển",
-      "free_shipping_desc": "Đơn hàng trên 500.000đ",
+      "free_shipping_desc": "Đơn hàng trên 2.000.000đ",
       "easy_returns": "Đổi trả dễ dàng",
-      "easy_returns_desc": "Đổi trả trong 30 ngày",
+      "easy_returns_desc": "Chính sách đổi trả 30 ngày",
       "support": "Hỗ trợ 24/7",
-      "support_desc": "Sẵn sàng hỗ trợ bạn",
+      "support_desc": "Hỗ trợ tận tâm",
       "secure_payment": "Thanh toán an toàn",
-      "secure_payment_desc": "100% bảo mật"
+      "secure_payment_desc": "Bảo mật 100%"
+    },
+    "sale": {
+      "title": "Khuyến mãi Sức khỏe Ưu tiên",
+      "subtitle": "Thực phẩm chức năng cao cấp giá không thể tốt hơn - Có thời hạn!",
+      "discount": "Giảm đến 40%"
+    },
+    "promo": {
+      "badge": "Ưu đãi Có hạn",
+      "title": "Giảm 20% Cho Đơn hàng Đầu tiên",
+      "subtitle": "Đăng ký ngay để nhận ưu đãi độc quyền!",
+      "cta": "Đăng ký ngay"
+    },
+    "featured": {
+      "badge": "Bộ sưu tập Của chúng tôi"
     },
     "newsletter": {
       "title": "Đăng ký nhận tin",

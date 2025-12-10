@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 // Methods
 import { getProductList, IProductFilters } from "../../services/Product";
+import { searchProducts, ISearchFilters } from "../../services/Search";
 
 // Components
 import ProductCard from "../../components/ui/cards/ProductCard/ProductCard";
@@ -37,14 +39,17 @@ import {
   Sort,
   Home,
 } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
 
 const PRODUCT_TYPES = [
   { value: "", label: "product.filter.all_types" },
-  { value: "Tops", label: "product.filter.tops" },
-  { value: "Bottoms", label: "product.filter.bottoms" },
-  { value: "Shoes", label: "product.filter.shoes" },
-  { value: "Accessories", label: "product.filter.accessories" },
+  { value: "Vitamins & Minerals", label: "home.categories.vitamins" },
+  { value: "Protein & Fitness", label: "home.categories.protein" },
+  { value: "Weight Management", label: "home.categories.weight_management" },
+  { value: "Beauty & Skin", label: "home.categories.beauty" },
+  { value: "Digestive Health", label: "home.categories.probiotics" },
+  { value: "Brain & Focus", label: "Brain & Focus" },
+  { value: "Immune Support", label: "home.categories.immune" },
+  { value: "Omega-3", label: "home.categories.omega3" },
 ];
 
 const SORT_OPTIONS = [
@@ -57,6 +62,7 @@ const SORT_OPTIONS = [
 export default function Products() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
@@ -67,6 +73,11 @@ export default function Products() {
   const [productType, setProductType] = useState<string>("");
   const [priceRange, setPriceRange] = useState<number[]>([0, 10000000]);
   const [sortBy, setSortBy] = useState<string>("newest");
+  const [manufacturer, setManufacturer] = useState<string>("");
+  const [certification, setCertification] = useState<string>("");
+  const [onSale, setOnSale] = useState<boolean>(false);
+  const [initialized, setInitialized] = useState<boolean>(false);
+  const [searchMode, setSearchMode] = useState<boolean>(false); // Track if using ES search
 
   const fetchProducts = useCallback(async (filters: IProductFilters) => {
     setLoading(true);
@@ -81,21 +92,121 @@ export default function Products() {
     }
   }, []);
 
-  // Initial load
-  useEffect(() => {
-    fetchProducts({ page: 0, limit: 20 });
+  // Search products using Elasticsearch
+  const searchProductsES = useCallback(async (query: string, filters: ISearchFilters) => {
+    setLoading(true);
+    setSearchMode(true);
+    try {
+      const response = await searchProducts({
+        q: query || undefined,
+        ...filters,
+      });
+      
+      if (response && response.items) {
+        setProducts(response.items);
+      } else {
+        // Fallback to regular API if ES fails
+        console.warn("Elasticsearch unavailable, falling back to regular API");
+        await fetchProducts({
+          page: 0,
+          limit: 20,
+          search: query || undefined,
+          product_type: filters.product_type,
+          min_price: filters.min_price,
+          max_price: filters.max_price,
+          on_sale: filters.on_sale,
+        });
+        setSearchMode(false);
+      }
+    } catch (error) {
+      console.error("Error searching products:", error);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
   }, [fetchProducts]);
 
+  // Parse URL params on mount and initialize filters
+  useEffect(() => {
+    const productTypeParam = searchParams.get("product_type");
+    const saleParam = searchParams.get("sale");
+    
+    if (productTypeParam) {
+      setProductType(productTypeParam);
+    }
+    if (saleParam === "true") {
+      setOnSale(true);
+    }
+    setInitialized(true);
+  }, [searchParams]);
+
+  // Fetch products when filters change (after initialization)
+  useEffect(() => {
+    if (!initialized) return;
+    
+    // If no search query, use regular API
+    if (!search) {
+      const filters: IProductFilters = {
+        page: 0,
+        limit: 20,
+        product_type: productType || undefined,
+        on_sale: onSale || undefined,
+      };
+      fetchProducts(filters);
+      setSearchMode(false);
+    }
+  }, [initialized, productType, onSale, search, fetchProducts]);
+
+  // Debounced search effect
+  useEffect(() => {
+    if (!initialized || !search) return;
+
+    const timer = setTimeout(() => {
+      const searchFilters: ISearchFilters = {
+        q: search,
+        page: 0,
+        limit: 20,
+        product_type: productType || undefined,
+        min_price: priceRange[0] > 0 ? priceRange[0] : undefined,
+        max_price: priceRange[1] < 10000000 ? priceRange[1] : undefined,
+        on_sale: onSale || undefined,
+        sort: sortBy as any,
+      };
+      searchProductsES(search, searchFilters);
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [initialized, search, productType, priceRange, onSale, sortBy, searchProductsES]);
+
   const handleSearch = () => {
-    const filters: IProductFilters = {
-      page: 0,
-      limit: 20,
-      search: search || undefined,
-      product_type: productType || undefined,
-      min_price: priceRange[0] || undefined,
-      max_price: priceRange[1] < 10000000 ? priceRange[1] : undefined,
-    };
-    fetchProducts(filters);
+    if (search) {
+      // Use Elasticsearch search
+      const searchFilters: ISearchFilters = {
+        q: search,
+        page: 0,
+        limit: 20,
+        product_type: productType || undefined,
+        min_price: priceRange[0] > 0 ? priceRange[0] : undefined,
+        max_price: priceRange[1] < 10000000 ? priceRange[1] : undefined,
+        on_sale: onSale || undefined,
+        sort: sortBy as any,
+      };
+      searchProductsES(search, searchFilters);
+    } else {
+      // Use regular API
+      const filters: IProductFilters = {
+        page: 0,
+        limit: 20,
+        product_type: productType || undefined,
+        min_price: priceRange[0] || undefined,
+        max_price: priceRange[1] < 10000000 ? priceRange[1] : undefined,
+        manufacturer: manufacturer || undefined,
+        certification: certification || undefined,
+        on_sale: onSale || undefined,
+      };
+      fetchProducts(filters);
+      setSearchMode(false);
+    }
     setMobileFilterOpen(false);
   };
 
@@ -104,6 +215,12 @@ export default function Products() {
     setProductType("");
     setPriceRange([0, 10000000]);
     setSortBy("newest");
+    setManufacturer("");
+    setCertification("");
+    setOnSale(false);
+    setSearchMode(false);
+    // Clear URL params
+    navigate("/products", { replace: true });
     fetchProducts({ page: 0, limit: 20 });
   };
 
@@ -111,6 +228,8 @@ export default function Products() {
     search,
     productType,
     priceRange[0] > 0 || priceRange[1] < 10000000,
+    manufacturer,
+    certification,
   ].filter(Boolean).length;
 
   const formatPrice = (value: number) => {
@@ -207,6 +326,44 @@ export default function Products() {
 
       <Divider sx={{ my: 2 }} />
 
+      {/* Manufacturer Filter */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+          Brand / Manufacturer
+        </Typography>
+        <TextField
+          fullWidth
+          size="small"
+          value={manufacturer}
+          onChange={(e) => setManufacturer(e.target.value)}
+          placeholder="e.g., Nature's Best, VitaGlow"
+        />
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Certification Filter */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+          Certifications
+        </Typography>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+          {["FDA", "GMP", "NSF", "Organic", "Non-GMO", "Vegan"].map((cert) => (
+            <Chip
+              key={cert}
+              label={cert}
+              onClick={() => setCertification(cert === certification ? "" : cert)}
+              color={certification === cert ? "primary" : "default"}
+              variant={certification === cert ? "filled" : "outlined"}
+              size="small"
+              sx={{ cursor: "pointer" }}
+            />
+          ))}
+        </Box>
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
+
       {/* Actions */}
       <Box sx={{ display: "flex", gap: 2 }}>
         <Button
@@ -279,6 +436,15 @@ export default function Products() {
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
                     {products.length} {t("product.items_found")}
+                    {searchMode && search && (
+                      <Chip 
+                        label={`Search: "${search}"`} 
+                        size="small" 
+                        color="primary" 
+                        variant="outlined"
+                        sx={{ ml: 1, height: 20, fontSize: "0.7rem" }}
+                      />
+                    )}
                   </Typography>
                 </Box>
 

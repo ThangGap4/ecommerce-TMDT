@@ -14,6 +14,13 @@ import {
   Breadcrumbs,
   Link,
   InputAdornment,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Divider,
 } from "@mui/material";
 import {
   Home,
@@ -26,17 +33,34 @@ import {
   Phone,
   LocationOn,
   Logout,
+  ShoppingBag,
+  Visibility,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { updateProfile, changePassword, IProfileUpdate, IPasswordChange } from "../../services/Auth";
+import { orderService, IOrderListItem } from "../../services/Order";
+import { useCurrency } from "../../context/CurrencyContext";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import CurrencySwitcher from "../../components/CurrencySwitcher";
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'pending': return 'warning';
+    case 'confirmed': return 'info';
+    case 'processing': return 'info';
+    case 'shipped': return 'primary';
+    case 'delivered': return 'success';
+    case 'cancelled': return 'error';
+    default: return 'default';
+  }
+};
 
 export default function Profile() {
   const { t } = useTranslation();
   const { user, isLoggedIn, setUser, logout } = useAuth();
+  const { formatPrice } = useCurrency();
   const navigate = useNavigate();
 
   // Profile form state
@@ -49,6 +73,10 @@ export default function Profile() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Orders state
+  const [orders, setOrders] = useState<IOrderListItem[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -71,6 +99,25 @@ export default function Profile() {
       setAddress(user.address || "");
     }
   }, [user]);
+
+  // Fetch user's orders
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!isLoggedIn) return;
+      
+      try {
+        setOrdersLoading(true);
+        const data = await orderService.getMyOrders();
+        setOrders(data);
+      } catch (err) {
+        console.error("Failed to fetch orders:", err);
+      } finally {
+        setOrdersLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [isLoggedIn]);
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -474,6 +521,103 @@ export default function Profile() {
               </Box>
             </Paper>
           </Grid>
+
+          {/* My Orders Section - Only for non-admin users */}
+          {user?.role !== "admin" && (
+            <Grid item xs={12}>
+              <Paper sx={{ p: 4, borderRadius: 3 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 2,
+                      bgcolor: "#667eea15",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <ShoppingBag sx={{ color: "#667eea" }} />
+                  </Box>
+                  <Typography variant="h6" fontWeight={600}>
+                    My Orders
+                  </Typography>
+                </Box>
+                <Divider sx={{ mb: 3 }} />
+
+                {ordersLoading ? (
+                  <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                    <CircularProgress />
+                </Box>
+              ) : orders.length === 0 ? (
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <ShoppingBag sx={{ fontSize: 64, color: "#ccc", mb: 2 }} />
+                  <Typography color="text.secondary">
+                    You haven't placed any orders yet
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    onClick={() => navigate("/products")}
+                    sx={{ mt: 2 }}
+                  >
+                    Start Shopping
+                  </Button>
+                </Box>
+              ) : (
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell><strong>Order ID</strong></TableCell>
+                        <TableCell><strong>Date</strong></TableCell>
+                        <TableCell><strong>Items</strong></TableCell>
+                        <TableCell><strong>Total</strong></TableCell>
+                        <TableCell><strong>Status</strong></TableCell>
+                        <TableCell align="right"><strong>Actions</strong></TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {orders.map((order) => (
+                        <TableRow key={order.id} hover>
+                          <TableCell>#{order.id}</TableCell>
+                          <TableCell>
+                            {new Date(order.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>{order.items_count} items</TableCell>
+                          <TableCell>
+                            <Typography fontWeight={600}>
+                              {formatPrice(order.total_amount)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={order.status}
+                              size="small"
+                              color={getStatusColor(order.status) as any}
+                              sx={{ textTransform: 'capitalize', fontWeight: 600 }}
+                            />
+                          </TableCell>
+                          <TableCell align="right">
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<Visibility />}
+                              onClick={() => navigate(`/orders/${order.id}`)}
+                              sx={{ textTransform: 'none' }}
+                            >
+                              View
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Paper>
+          </Grid>
+          )}
         </Grid>
       </Container>
     </Box>

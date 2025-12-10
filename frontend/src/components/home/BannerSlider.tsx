@@ -15,27 +15,27 @@ interface BannerSliderProps {
 const defaultBanners = [
   {
     id: 1,
-    imageUrl: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=400&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?w=1200&h=400&fit=crop",
     link: "/products?sale=true",
-    alt: "Summer Sale - Up to 50% Off",
+    alt: "Health Supplements Sale - Up to 50% Off",
   },
   {
     id: 2,
-    imageUrl: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&h=400&fit=crop",
-    link: "/products?type=Tops",
-    alt: "New Fashion Collection",
+    imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=400&fit=crop",
+    link: "/products?category=Vitamins & Minerals",
+    alt: "Premium Vitamins & Minerals",
   },
   {
     id: 3,
-    imageUrl: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&h=400&fit=crop",
-    link: "/products?type=Shoes",
-    alt: "Shoes Collection",
+    imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=400&fit=crop",
+    link: "/products?category=Protein & Fitness",
+    alt: "Protein & Fitness Supplements",
   },
   {
     id: 4,
-    imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=400&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1200&h=400&fit=crop",
     link: "/products",
-    alt: "Shop Now",
+    alt: "Shop Health Supplements",
   },
 ];
 

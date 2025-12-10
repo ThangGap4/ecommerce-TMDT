@@ -8,9 +8,13 @@ from fastapi import HTTPException
 from fastapi_pagination import Page, paginate
 from app import app
 from app.i18n_keys import I18nKeys
+from app.search.product_sync import index_product, delete_product_from_index
 import os
 from colorama import Fore
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 db = get_db_session()
 def map_product_to_response(db_product: Product) -> ProductResponse:
@@ -67,6 +71,12 @@ class Product_Service():
                 db.add(db_color)
             db.commit()
 
+        # Sync to Elasticsearch (non-blocking, don't fail if ES is down)
+        try:
+            index_product(db_product)
+        except Exception as e:
+            logger.error(f"Failed to sync product {db_product.id} to Elasticsearch: {e}")
+
         return map_product_to_response(db_product).dict()
 
     # Get a list of all products with filters
@@ -77,12 +87,15 @@ class Product_Service():
         product_type: Optional[str] = None,
         min_price: Optional[float] = None,
         max_price: Optional[float] = None,
-        search: Optional[str] = None
+        search: Optional[str] = None,
+        manufacturer: Optional[str] = None,
+        certification: Optional[str] = None,
+        on_sale: Optional[bool] = None
     ) -> List[Dict]:
         try:
             query = db.query(Product)
             
-            # Filter by product_type (e.g., "Tops", "Bottoms", "Shoes")
+            # Filter by product_type (e.g., "Vitamins", "Protein", etc.)
             if product_type:
                 query = query.filter(Product.product_type.ilike(f"%{product_type}%"))
             
@@ -95,6 +108,18 @@ class Product_Service():
                 query = query.filter(Product.price >= min_price)
             if max_price is not None:
                 query = query.filter(Product.price <= max_price)
+            
+            # Filter by manufacturer/brand
+            if manufacturer:
+                query = query.filter(Product.manufacturer.ilike(f"%{manufacturer}%"))
+            
+            # Filter by certification (supports comma-separated: "FDA,GMP")
+            if certification:
+                query = query.filter(Product.certification.ilike(f"%{certification}%"))
+            
+            # Filter products on sale (has sale_price)
+            if on_sale:
+                query = query.filter(Product.sale_price.isnot(None))
             
             # Search by product name or description
             if search:
@@ -137,6 +162,13 @@ class Product_Service():
             
             db.commit()
             db.refresh(db_product)
+            
+            # Sync to Elasticsearch
+            try:
+                index_product(db_product)
+            except Exception as e:
+                logger.error(f"Failed to update product {db_product.id} in Elasticsearch: {e}")
+            
             return map_product_to_response(db_product).dict()
         except HTTPException:
             raise
@@ -151,8 +183,17 @@ class Product_Service():
             if not db_product:
                 raise HTTPException(status_code=404, detail=I18nKeys.PRODUCT_NOT_FOUND)
             
+            product_id = db_product.id
+            
             db.delete(db_product)
             db.commit()
+            
+            # Remove from Elasticsearch
+            try:
+                delete_product_from_index(product_id)
+            except Exception as e:
+                logger.error(f"Failed to delete product {product_id} from Elasticsearch: {e}")
+            
             return True
         except HTTPException:
             raise

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, date
 import uuid
 
 class ProductColorBase(BaseModel):
@@ -27,6 +27,18 @@ class ProductBase(BaseModel):
     image_url: Optional[str] = Field(None, example="http://example.com/image.png")
     sale_price: Optional[float] = Field(None, gt=0, example=9.99)
     stock: int = Field(..., ge=0, example=100)
+    
+    # Supplement-specific fields
+    serving_size: Optional[str] = Field(None, example="2 capsules")
+    servings_per_container: Optional[int] = Field(None, example=30)
+    ingredients: Optional[str] = Field(None, example="Whey Protein Isolate, Natural Flavors, Stevia")
+    allergen_info: Optional[str] = Field(None, example="Contains: Milk, Soy")
+    usage_instructions: Optional[str] = Field(None, example="Take 2 capsules daily with water")
+    warnings: Optional[str] = Field(None, example="Consult physician if pregnant or nursing")
+    expiry_date: Optional[date] = Field(None, example="2026-12-31")
+    manufacturer: Optional[str] = Field(None, example="Nature's Best Co.")
+    country_of_origin: Optional[str] = Field(None, example="USA")
+    certification: Optional[str] = Field(None, example="FDA, GMP, NSF Certified")
 
 class ProductCreate(ProductBase):
     stock: Optional[int] = Field(None, ge=0, example=100)

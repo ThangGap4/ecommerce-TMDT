@@ -11,8 +11,8 @@ interface TopBannerProps {
 }
 
 export default function TopBanner({
-  title = "Discover Your Perfect Style",
-  subtitle = "Explore our curated collection of premium fashion items",
+  title = "Discover Your Best Health",
+  subtitle = "Explore our science-backed collection of premium supplements",
   imageUrl,
   ctaLabel = "Shop Now",
   ctaAction,

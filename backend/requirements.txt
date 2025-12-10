@@ -14,6 +14,7 @@ colorama
 cloudinary
 python-multipart
 redis[hiredis]
+elasticsearch==8.15.0
 openai
 stripe
 app

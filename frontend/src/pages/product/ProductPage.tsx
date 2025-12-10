@@ -9,6 +9,7 @@ import { useAuth } from "../../context/AuthContext";
 
 import AddToCart from "../../components/ui/buttons/AddToCart/AddToCart";
 import RadioProduct from "../../components/ui/buttons/RadioProduct/RadioProduct";
+import FDADisclaimer from "../../components/shared/FDADisclaimer";
 
 import {
   Typography,
@@ -349,6 +350,88 @@ export default function ProductPage() {
                     {productInfo.blurb}
                   </Typography>
 
+                  {/* Supplement-Specific Information */}
+                  {(productInfo as any).serving_size && (
+                    <Box sx={{ mb: 3 }}>
+                      <Paper variant="outlined" sx={{ p: 2, bgcolor: "#f8f9fa", borderRadius: 2 }}>
+                        <Typography variant="subtitle2" fontWeight={700} gutterBottom sx={{ color: "#1976d2" }}>
+                          Supplement Facts
+                        </Typography>
+                        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5 }}>
+                          <Box>
+                            <Typography variant="caption" color="text.secondary" display="block">
+                              Serving Size
+                            </Typography>
+                            <Typography variant="body2" fontWeight={600}>
+                              {(productInfo as any).serving_size}
+                            </Typography>
+                          </Box>
+                          {(productInfo as any).servings_per_container && (
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" display="block">
+                                Servings Per Container
+                              </Typography>
+                              <Typography variant="body2" fontWeight={600}>
+                                {(productInfo as any).servings_per_container}
+                              </Typography>
+                            </Box>
+                          )}
+                          {(productInfo as any).manufacturer && (
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" display="block">
+                                Manufacturer
+                              </Typography>
+                              <Typography variant="body2" fontWeight={600}>
+                                {(productInfo as any).manufacturer}
+                              </Typography>
+                            </Box>
+                          )}
+                          {(productInfo as any).country_of_origin && (
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" display="block">
+                                Made In
+                              </Typography>
+                              <Typography variant="body2" fontWeight={600}>
+                                {(productInfo as any).country_of_origin}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                        {(productInfo as any).certification && (
+                          <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid #e0e0e0" }}>
+                            <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                              Certifications
+                            </Typography>
+                            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                              {(productInfo as any).certification.split(",").map((cert: string, idx: number) => (
+                                <Chip
+                                  key={idx}
+                                  label={cert.trim()}
+                                  size="small"
+                                  icon={<Verified />}
+                                  color="primary"
+                                  variant="outlined"
+                                />
+                              ))}
+                            </Box>
+                          </Box>
+                        )}
+                      </Paper>
+                    </Box>
+                  )}
+
+                  {/* Warnings Alert */}
+                  {(productInfo as any).warnings && (
+                    <Alert severity="warning" sx={{ mb: 3 }}>
+                      <Typography variant="body2" fontWeight={600} gutterBottom>
+                        Important Safety Information
+                      </Typography>
+                      <Typography variant="body2">
+                        {(productInfo as any).warnings}
+                      </Typography>
+                    </Alert>
+                  )}
+
                   <Divider sx={{ my: 3 }} />
 
                   {/* Color Selection */}
@@ -416,13 +499,60 @@ export default function ProductPage() {
 
               <Box sx={{ p: 3 }}>
                 {tabValue === 0 && (
-                  <Typography color="text.secondary" sx={{ lineHeight: 1.8 }}>
-                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-                    Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                    <br /><br />
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                  </Typography>
+                  <Box>
+                    <Typography color="text.secondary" sx={{ lineHeight: 1.8, mb: 3 }}>
+                      {productInfo.description || "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."}
+                    </Typography>
+
+                    {/* Ingredients Section */}
+                    {(productInfo as any).ingredients && (
+                      <Box sx={{ mb: 3 }}>
+                        <Typography variant="h6" fontWeight={600} gutterBottom>
+                          Ingredients
+                        </Typography>
+                        <Paper variant="outlined" sx={{ p: 2, bgcolor: "#fafafa" }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {(productInfo as any).ingredients}
+                          </Typography>
+                        </Paper>
+                      </Box>
+                    )}
+
+                    {/* Usage Instructions */}
+                    {(productInfo as any).usage_instructions && (
+                      <Box sx={{ mb: 3 }}>
+                        <Typography variant="h6" fontWeight={600} gutterBottom>
+                          How to Use
+                        </Typography>
+                        <Paper variant="outlined" sx={{ p: 2, bgcolor: "#e3f2fd", borderColor: "#1976d2" }}>
+                          <Typography variant="body2" color="text.primary">
+                            {(productInfo as any).usage_instructions}
+                          </Typography>
+                        </Paper>
+                      </Box>
+                    )}
+
+                    {/* Allergen Info */}
+                    {(productInfo as any).allergen_info && (productInfo as any).allergen_info !== "None" && (
+                      <Box sx={{ mb: 3 }}>
+                        <Typography variant="h6" fontWeight={600} gutterBottom>
+                          Allergen Information
+                        </Typography>
+                        <Alert severity="info">
+                          <Typography variant="body2">
+                            {(productInfo as any).allergen_info}
+                          </Typography>
+                        </Alert>
+                      </Box>
+                    )}
+
+                    {/* FDA Disclaimer for Supplements */}
+                    {(productInfo as any).serving_size && (
+                      <Box sx={{ mt: 4, pt: 3, borderTop: "1px solid #eee" }}>
+                        <FDADisclaimer variant="standard" />
+                      </Box>
+                    )}
+                  </Box>
                 )}
 
                 {tabValue === 1 && (

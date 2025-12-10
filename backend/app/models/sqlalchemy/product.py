@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Float, Integer, Text, ForeignKey, DateTime, Table
+from sqlalchemy import Column, String, Float, Integer, Text, ForeignKey, DateTime, Table, Date
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.db import Base
@@ -19,6 +19,18 @@ class Product(Base):
     blurb = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
     image_url = Column(String, nullable=True)
+    
+    # Supplement-specific fields
+    serving_size = Column(String(100), nullable=True)
+    servings_per_container = Column(Integer, nullable=True)
+    ingredients = Column(Text, nullable=True)
+    allergen_info = Column(Text, nullable=True)
+    usage_instructions = Column(Text, nullable=True)
+    warnings = Column(Text, nullable=True)
+    expiry_date = Column(Date, nullable=True)
+    manufacturer = Column(String(255), nullable=True)
+    country_of_origin = Column(String(100), nullable=True)
+    certification = Column(String(255), nullable=True)
 
     reviews = relationship("Review", back_populates="product")
     categories = relationship("Category", secondary=product_categories, back_populates="products")

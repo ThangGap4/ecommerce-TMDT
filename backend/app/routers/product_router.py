@@ -16,9 +16,10 @@ product_router = APIRouter()
 
 # Cache key builders
 def build_products_cache_key(page: int, limit: int, category: str = None, product_type: str = None, 
-                              min_price: float = None, max_price: float = None, search: str = None) -> str:
+                              min_price: float = None, max_price: float = None, search: str = None,
+                              on_sale: bool = None) -> str:
     """Build cache key for products list based on query params"""
-    return f"products:page={page}:limit={limit}:cat={category}:type={product_type}:min={min_price}:max={max_price}:search={search}"
+    return f"products:page={page}:limit={limit}:cat={category}:type={product_type}:min={min_price}:max={max_price}:search={search}:sale={on_sale}"
 
 def build_product_cache_key(product_slug: str) -> str:
     """Build cache key for single product"""
@@ -30,13 +31,16 @@ async def read_products(
     page: int = Query(0, ge=0, description="Page number"),
     limit: int = Query(10, ge=1, le=100, description="Items per page"),
     category: Optional[str] = Query(None, description="Filter by category name"),
-    product_type: Optional[str] = Query(None, description="Filter by product type (Tops, Bottoms, Shoes, etc.)"),
+    product_type: Optional[str] = Query(None, description="Filter by product type (Vitamins, Protein, etc.)"),
     min_price: Optional[float] = Query(None, ge=0, description="Minimum price"),
     max_price: Optional[float] = Query(None, ge=0, description="Maximum price"),
-    search: Optional[str] = Query(None, description="Search by product name or description")
+    search: Optional[str] = Query(None, description="Search by product name or description"),
+    manufacturer: Optional[str] = Query(None, description="Filter by manufacturer/brand"),
+    certification: Optional[str] = Query(None, description="Filter by certification (FDA, GMP, NSF, etc.)"),
+    on_sale: Optional[bool] = Query(None, description="Filter products on sale (with sale_price)")
 ):
     """Get products with optional filters - with Redis cache"""
-    cache_key = build_products_cache_key(page, limit, category, product_type, min_price, max_price, search)
+    cache_key = f"products:page={page}:limit={limit}:cat={category}:type={product_type}:min={min_price}:max={max_price}:search={search}:mfr={manufacturer}:cert={certification}:sale={on_sale}"
     
     # Try cache first
     cached = await cache_get(cache_key)
@@ -51,7 +55,10 @@ async def read_products(
         product_type=product_type,
         min_price=min_price,
         max_price=max_price,
-        search=search
+        search=search,
+        manufacturer=manufacturer,
+        certification=certification,
+        on_sale=on_sale
     )
     
     # Set cache (TTL 5 minutes)

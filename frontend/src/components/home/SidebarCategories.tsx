@@ -12,23 +12,25 @@ import {
   useTheme,
 } from "@mui/material";
 import {
-  NewReleases,
-  Checkroom,
-  Straighten,
-  DirectionsRun,
-  Watch,
-  LocalOffer,
   Menu as MenuIcon,
   Close,
+  Medication,
+  FitnessCenter,
+  MonitorWeight,
+  Spa,
+  Restaurant,
+  Psychology,
+  HealthAndSafety,
 } from "@mui/icons-material";
 
 const categories = [
-  { name: "New Arrivals", icon: <NewReleases />, href: "/products?category=new-arrivals", color: "#e94560" },
-  { name: "Tops", icon: <Checkroom />, href: "/products?type=Tops", color: "#667eea" },
-  { name: "Bottoms", icon: <Straighten />, href: "/products?type=Bottoms", color: "#764ba2" },
-  { name: "Shoes", icon: <DirectionsRun />, href: "/products?type=Shoes", color: "#0f3460" },
-  { name: "Accessories", icon: <Watch />, href: "/products?type=Accessories", color: "#533483" },
-  { name: "Sale", icon: <LocalOffer />, href: "/products?sale=true", color: "#e94560" },
+  { name: "Vitamins & Minerals", icon: <Medication />, href: "/products?category=Vitamins & Minerals", color: "#667eea" },
+  { name: "Protein & Fitness", icon: <FitnessCenter />, href: "/products?category=Protein & Fitness", color: "#764ba2" },
+  { name: "Weight Management", icon: <MonitorWeight />, href: "/products?category=Weight Management", color: "#0f3460" },
+  { name: "Beauty & Skin", icon: <Spa />, href: "/products?category=Beauty & Skin", color: "#e94560" },
+  { name: "Digestive Health", icon: <Restaurant />, href: "/products?category=Digestive Health", color: "#533483" },
+  { name: "Brain & Focus", icon: <Psychology />, href: "/products?category=Brain & Focus", color: "#667eea" },
+  { name: "Immune Support", icon: <HealthAndSafety />, href: "/products?category=Immune Support", color: "#e94560" },
 ];
 
 interface SidebarCategoriesProps {

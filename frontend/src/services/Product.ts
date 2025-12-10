@@ -25,6 +25,9 @@ export interface IProductFilters {
   min_price?: number;
   max_price?: number;
   search?: string;
+  manufacturer?: string;
+  certification?: string;
+  on_sale?: boolean;
 }
 
 export const getProductList = async (filters: IProductFilters = {}) => {
@@ -38,6 +41,9 @@ export const getProductList = async (filters: IProductFilters = {}) => {
     if (filters.min_price !== undefined) params.append("min_price", filters.min_price.toString());
     if (filters.max_price !== undefined) params.append("max_price", filters.max_price.toString());
     if (filters.search) params.append("search", filters.search);
+    if (filters.manufacturer) params.append("manufacturer", filters.manufacturer);
+    if (filters.certification) params.append("certification", filters.certification);
+    if (filters.on_sale) params.append("on_sale", "true");
 
     const response = await fetch(`${BACKEND_URL}/products?${params.toString()}`);
     

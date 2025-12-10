@@ -6,6 +6,7 @@ export interface IProduct {
   price: number;
   sale_price: number;
   blurb: string;
+  description?: string;
   stock: number;
   image_url: string;
   slug?: string;
@@ -19,6 +20,17 @@ export interface IProduct {
     color: string;
     image_url?: string;
   }>;
+  // Supplement-specific fields
+  serving_size?: string;
+  servings_per_container?: number;
+  ingredients?: string;
+  allergen_info?: string;
+  usage_instructions?: string;
+  warnings?: string;
+  expiry_date?: string;
+  manufacturer?: string;
+  country_of_origin?: string;
+  certification?: string;
 }
 
 export class Product implements IProduct {
@@ -29,6 +41,7 @@ export class Product implements IProduct {
   sale_price: number;
   price: number;
   blurb: string;
+  description?: string;
   stock: number;
   image_url: string;
   slug?: string;
@@ -42,6 +55,17 @@ export class Product implements IProduct {
     color: string;
     image_url?: string;
   }>;
+  // Supplement-specific fields
+  serving_size?: string;
+  servings_per_container?: number;
+  ingredients?: string;
+  allergen_info?: string;
+  usage_instructions?: string;
+  warnings?: string;
+  expiry_date?: string;
+  manufacturer?: string;
+  country_of_origin?: string;
+  certification?: string;
 
   constructor(product: any) {
     this.id = product.id;
@@ -51,11 +75,23 @@ export class Product implements IProduct {
     this.price = product.price;
     this.sale_price = product.sale_price;
     this.blurb = product.blurb;
+    this.description = product.description;
     this.stock = product.stock;
     this.image_url = product.image_url;
     this.slug = product.slug;
     this.sizes = product.sizes || [];
     this.colors = product.colors || [];
+    // Supplement fields
+    this.serving_size = product.serving_size;
+    this.servings_per_container = product.servings_per_container;
+    this.ingredients = product.ingredients;
+    this.allergen_info = product.allergen_info;
+    this.usage_instructions = product.usage_instructions;
+    this.warnings = product.warnings;
+    this.expiry_date = product.expiry_date;
+    this.manufacturer = product.manufacturer;
+    this.country_of_origin = product.country_of_origin;
+    this.certification = product.certification;
   }
 }
 

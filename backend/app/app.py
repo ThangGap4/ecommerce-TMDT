@@ -11,10 +11,12 @@ from app.routers.order_router import order_router
 from app.routers.chat_router import chat_router
 from app.routers.payment_router import payment_router
 from app.routers.webhook_router import webhook_router
+from app.routers.search_router import router as search_router
 
 from app.db import create_tables
 from app.models.sqlalchemy import *
 from app.cache import init_redis, close_redis
+from app.search.product_index import ensure_product_index
 
 from fastapi_pagination import Page, add_pagination, paginate
 
@@ -73,6 +75,7 @@ async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
     # Startup
     await init_redis()
+    ensure_product_index()  # Create ES index if not exists
     yield
     # Shutdown
     await close_redis()
@@ -129,6 +132,7 @@ app.include_router(chat_router, tags=["Chat"])
 app.include_router(payment_router, tags=["Payments"])
 app.include_router(webhook_router, tags=["Webhooks"])
 app.include_router(support_router)
+app.include_router(search_router, tags=["Search"])  # Elasticsearch search
 add_pagination(app)
 
 create_tables()

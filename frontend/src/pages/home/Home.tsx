@@ -4,6 +4,7 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import PaymentIcon from "@mui/icons-material/Payment";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
+import { useTranslation } from "react-i18next";
 
 import { getProductList } from "../../services/Product";
 import ProductCard from "../../components/ui/cards/ProductCard/ProductCard";
@@ -14,14 +15,15 @@ import CategoryBanners from "../../components/home/CategoryBanners";
 import ProductHighlightCarousel from "../../components/home/ProductHighlightCarousel";
 import FeaturedPopupBanner from "../../components/home/FeaturedPopupBanner";
 
-const features = [
-  { icon: <LocalShippingIcon sx={{ fontSize: { xs: 24, sm: 32, md: 36 } }} />, title: "Free Shipping", desc: "On orders over $100" },
-  { icon: <SupportAgentIcon sx={{ fontSize: { xs: 24, sm: 32, md: 36 } }} />, title: "24/7 Support", desc: "Dedicated support" },
-  { icon: <PaymentIcon sx={{ fontSize: { xs: 24, sm: 32, md: 36 } }} />, title: "Secure Payment", desc: "100% secure payment" },
-  { icon: <ShoppingBagIcon sx={{ fontSize: { xs: 24, sm: 32, md: 36 } }} />, title: "Easy Returns", desc: "30 days return policy" },
-];
-
 export default function Home() {
+  const { t } = useTranslation();
+  
+  const features = [
+    { icon: <LocalShippingIcon sx={{ fontSize: { xs: 24, sm: 32, md: 36 } }} />, title: t("home.features.free_shipping"), desc: t("home.features.free_shipping_desc") },
+    { icon: <SupportAgentIcon sx={{ fontSize: { xs: 24, sm: 32, md: 36 } }} />, title: t("home.features.support"), desc: t("home.features.support_desc") },
+    { icon: <PaymentIcon sx={{ fontSize: { xs: 24, sm: 32, md: 36 } }} />, title: t("home.features.secure_payment"), desc: t("home.features.secure_payment_desc") },
+    { icon: <ShoppingBagIcon sx={{ fontSize: { xs: 24, sm: 32, md: 36 } }} />, title: t("home.features.easy_returns"), desc: t("home.features.easy_returns_desc") },
+  ];
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [newArrivals, setNewArrivals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,10 +50,10 @@ export default function Home() {
   return (
     <Box sx={{ bgcolor: "#f5f5fa", minHeight: "100vh" }}>
       <FeaturedPopupBanner
-        title="Flash Sale"
-        subtitle="Don't miss out on our biggest sale of the season!"
-        discount="Up to 50% OFF"
-        ctaLabel="Shop Sale"
+        title={t("home.sale.title")}
+        subtitle={t("home.sale.subtitle")}
+        discount={t("home.sale.discount")}
+        ctaLabel={t("home.shop_now")}
         ctaHref="/products?sale=true"
       />
 
@@ -109,7 +111,7 @@ export default function Home() {
                   ))}
                 </Box>
               ) : (
-                <ProductHighlightCarousel title="New Arrivals" subtitle="Just dropped" products={newArrivals} />
+                <ProductHighlightCarousel title={t("home.new_arrivals")} subtitle={t("home.new_arrivals_subtitle")} products={newArrivals} />
               )}
             </Box>
 
@@ -129,13 +131,13 @@ export default function Home() {
             >
               <Box sx={{ textAlign: { xs: "center", sm: "left" } }}>
                 <Typography sx={{ color: "#ffd93d", fontSize: { xs: "10px", sm: "11px" }, fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", mb: 0.5 }}>
-                  Limited Time Offer
+                  {t("home.promo.badge")}
                 </Typography>
                 <Typography sx={{ color: "white", fontWeight: 700, mb: 0.5, fontSize: { xs: "1.1rem", sm: "1.5rem" } }}>
-                  Get 20% Off Your First Order
+                  {t("home.promo.title")}
                 </Typography>
                 <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.8)", fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
-                  Sign up now and receive exclusive discounts!
+                  {t("home.promo.subtitle")}
                 </Typography>
               </Box>
               <Button
@@ -144,7 +146,7 @@ export default function Home() {
                 size="small"
                 sx={{ bgcolor: "#e94560", px: { xs: 2.5, sm: 3 }, py: { xs: 0.75, sm: 1 }, fontWeight: 600, borderRadius: "50px", textTransform: "none", whiteSpace: "nowrap", fontSize: { xs: "0.8rem", sm: "0.875rem" }, "&:hover": { bgcolor: "#d63050" } }}
               >
-                Sign Up Now
+                {t("home.promo.cta")}
               </Button>
             </Box>
 
@@ -152,10 +154,10 @@ export default function Home() {
             <Box sx={{ mt: { xs: 2, sm: 3 } }}>
               <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
                 <Typography sx={{ color: "#667eea", fontSize: { xs: "10px", sm: "11px" }, fontWeight: 600, letterSpacing: "2px", textTransform: "uppercase", mb: 0.5 }}>
-                  Our Collection
+                  {t("home.featured.badge")}
                 </Typography>
                 <Typography sx={{ fontWeight: 700, color: "#1a1a2e", fontSize: { xs: "1rem", sm: "1.25rem" } }}>
-                  Featured Products
+                  {t("product.featured")}
                 </Typography>
               </Box>
 
@@ -177,7 +179,7 @@ export default function Home() {
                 </Grid>
               ) : (
                 <Box sx={{ textAlign: "center", py: { xs: 4, sm: 8 } }}>
-                  <Typography variant="body1" color="text.secondary">No products available yet.</Typography>
+                  <Typography variant="body1" color="text.secondary">{t("product.no_products")}</Typography>
                 </Box>
               )}
 
@@ -197,14 +199,14 @@ export default function Home() {
                     transition: "all 0.3s ease",
                   }}
                 >
-                  View All Products
+                  {t("product.view_all")}
                 </Button>
               </Box>
             </Box>
 
             <Box sx={{ mt: { xs: 2, sm: 4 } }}>
               {!loading && featuredProducts.length > 0 && (
-                <ProductHighlightCarousel title="Best Sellers" subtitle="Top picks this week" products={featuredProducts.slice(0, 8)} />
+                <ProductHighlightCarousel title={t("home.best_sellers")} subtitle={t("home.best_sellers_subtitle")} products={featuredProducts.slice(0, 8)} />
               )}
             </Box>
           </Box>

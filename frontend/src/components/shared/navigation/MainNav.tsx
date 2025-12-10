@@ -11,17 +11,19 @@ import {
 } from "@mui/material";
 import { Menu as MenuIcon, Close as CloseIcon } from "@mui/icons-material";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function MainNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { t } = useTranslation();
 
   const navLinks = [
-    { label: "Trang chu", href: "/" },
-    { label: "San pham", href: "/products" },
-    { label: "Ao", href: "/products?type=Tops" },
-    { label: "Quan", href: "/products?type=Bottoms" },
-    { label: "Giay", href: "/products?type=Shoes" },
-    { label: "Giam gia", href: "/products?sale=true" },
+    { label: t("nav.home"), href: "/" },
+    { label: t("nav.products"), href: "/products" },
+    { label: t("home.categories.vitamins"), href: "/products?product_type=Vitamins & Minerals" },
+    { label: t("home.categories.protein"), href: "/products?product_type=Protein & Fitness" },
+    { label: t("home.categories.weight_management"), href: "/products?product_type=Weight Management" },
+    { label: t("product.filter.sale"), href: "/products?sale=true" },
   ];
 
   const handleDrawerToggle = () => {

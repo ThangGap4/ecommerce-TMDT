@@ -295,7 +295,7 @@ export default function ChatWidget() {
               </IconButton>
             </Box>
             <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5, textAlign: "center" }}>
-              Try: "Show me blue tops" or "Recommend shoes under $50"
+              Try: "Show me protein powder" or "Recommend vitamins for immunity"
             </Typography>
           </Box>
         </Paper>

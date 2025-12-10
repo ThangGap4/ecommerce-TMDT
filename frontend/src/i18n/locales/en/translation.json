@@ -90,6 +90,7 @@
   "product": {
     "title": "Products",
     "not_found": "Product not found",
+    "no_products": "No products available yet",
     "created": "Product created",
     "updated": "Product updated",
     "deleted": "Product deleted",
@@ -108,10 +109,11 @@
     "add_to_cart": "Add to Cart",
     "buy_now": "Buy Now",
     "view_details": "View Details",
+    "view_all": "View All Products",
     "filter_by": "Filter by",
     "sort_by": "Sort by",
     "all_products": "All Products",
-    "featured": "Featured",
+    "featured": "Featured Products",
     "new_arrivals": "New Arrivals",
     "items_found": "items",
     "no_products_found": "No products found",
@@ -127,10 +129,14 @@
       "reset": "Reset",
       "clear_all": "Clear All",
       "all_types": "All",
-      "tops": "Tops",
-      "bottoms": "Bottoms",
-      "shoes": "Shoes",
-      "accessories": "Accessories"
+      "vitamins": "Vitamins & Minerals",
+      "protein": "Protein & Fitness",
+      "weight_management": "Weight Management",
+      "beauty": "Beauty & Wellness",
+      "immune": "Immune Support",
+      "probiotics": "Probiotics & Digestive Health",
+      "omega3": "Omega-3 & Heart Health",
+      "sale": "On Sale"
     },
     "sort": {
       "label": "Sort",
@@ -222,31 +228,51 @@
     "not_found": "Not found",
     "forbidden": "Access denied",
     "bad_request": "Invalid request",
-    "free_shipping": "Free Shipping on Orders Over US$ 100"
+    "free_shipping": "Free Shipping on Orders Over $100 - Science-Backed Supplements"
   },
   "home": {
-    "hero_title": "Discover New Styles",
-    "hero_subtitle": "Shop the latest collections with exclusive deals",
-    "shop_now": "Shop Now",
-    "explore_collections": "Explore Collections",
+    "hero_title": "Discover Your Best Health",
+    "hero_subtitle": "Premium supplements backed by science for optimal wellness",
+    "shop_now": "Shop Supplements",
+    "explore_collections": "Explore Products",
     "shop_by_category": "Shop by Category",
     "new_arrivals": "New Arrivals",
+    "new_arrivals_subtitle": "Just dropped",
+    "best_sellers": "Best Sellers",
+    "best_sellers_subtitle": "Top picks this week",
     "view_all": "View All",
     "categories": {
-      "tops": "Tops",
-      "bottoms": "Bottoms",
-      "shoes": "Shoes",
-      "accessories": "Accessories"
+      "vitamins": "Vitamins & Minerals",
+      "protein": "Protein & Fitness",
+      "weight_management": "Weight Management",
+      "beauty": "Beauty & Wellness",
+      "immune": "Immune Support",
+      "probiotics": "Probiotics & Digestive Health",
+      "omega3": "Omega-3 & Heart Health"
     },
     "features": {
       "free_shipping": "Free Shipping",
-      "free_shipping_desc": "On orders over $50",
+      "free_shipping_desc": "On orders over $100",
       "easy_returns": "Easy Returns",
-      "easy_returns_desc": "30-day return policy",
+      "easy_returns_desc": "30 days return policy",
       "support": "24/7 Support",
-      "support_desc": "Ready to help you",
+      "support_desc": "Dedicated support",
       "secure_payment": "Secure Payment",
-      "secure_payment_desc": "100% protected"
+      "secure_payment_desc": "100% secure payment"
+    },
+    "sale": {
+      "title": "Health First Sale",
+      "subtitle": "Premium supplements at unbeatable prices - Limited time!",
+      "discount": "Up to 40% OFF"
+    },
+    "promo": {
+      "badge": "Limited Time Offer",
+      "title": "Get 20% Off Your First Order",
+      "subtitle": "Sign up now and receive exclusive discounts!",
+      "cta": "Sign Up Now"
+    },
+    "featured": {
+      "badge": "Our Collection"
     },
     "newsletter": {
       "title": "Subscribe to Newsletter",

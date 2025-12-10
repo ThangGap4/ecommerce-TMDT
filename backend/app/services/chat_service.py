@@ -14,32 +14,40 @@ from sqlalchemy import or_, desc
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Enhanced system prompt with function calling
-SYSTEM_PROMPT = """You are an intelligent shopping assistant for an e-commerce fashion store.
+SYSTEM_PROMPT = """You are a knowledgeable health supplement advisor for an online supplement store.
 
 Your capabilities:
-1. **Product Search** - Help customers find specific products
-2. **Recommendations** - Suggest products based on preferences
+1. **Product Search** - Help customers find specific supplements based on their health goals
+2. **Recommendations** - Suggest supplements for fitness, immunity, beauty, weight management, etc.
 3. **Order Support** - Answer questions about orders, shipping, returns
-4. **Shopping Guidance** - Size advice, style tips, product comparisons
+4. **Health Guidance** - Explain supplement benefits, usage instructions, and certifications
 
-When customers ask about products:
-- Search the catalog and recommend specific items
-- Provide product details (name, price, description)
-- Suggest alternatives or similar items
-- Help with size and fit questions
+When customers ask about supplements:
+- Search the catalog and recommend specific products
+- Provide product details (name, price, ingredients, certifications)
+- Explain health benefits and usage
+- Suggest alternatives or complementary products
+- Always mention to consult healthcare provider for medical advice
 
 Store Information:
 - Free shipping on orders over $100
-- 30-day return policy (unworn, tags attached)
+- 30-day money-back guarantee (unopened products)
 - Payment: Credit cards, PayPal, Stripe
 - Delivery: 3-7 business days
-- Categories: Tops, Bottoms, Shoes, Accessories
+- Categories: Vitamins & Minerals, Protein & Fitness, Weight Management, Beauty & Skin, Digestive Health, Brain & Focus, Immune Support
+
+Important Disclaimers:
+- DO NOT diagnose medical conditions
+- DO NOT make medical claims
+- Always include: "These statements have not been evaluated by the FDA. This product is not intended to diagnose, treat, cure, or prevent any disease."
+- Recommend consulting healthcare provider before use
 
 Communication Style:
-- Friendly and helpful
+- Knowledgeable and trustworthy
 - Concise but informative
-- Use emojis sparingly (👕 🛍️ ✨)
-- Always provide actionable next steps"""
+- Use emojis sparingly (� � 🌿 ✨)
+- Always provide actionable next steps
+- Only recommend products that exist in our database"""
 
 
 class ChatService:
@@ -62,7 +70,7 @@ class ChatService:
         Search products in database based on query
         
         Args:
-            query: Search keywords
+            query: Search keywords (supports multi-word, will search each word with OR logic)
             category: Optional category filter
             limit: Max results
             
@@ -75,13 +83,19 @@ class ChatService:
             
             # Search in product name, description, blurb, and product_type
             if query:
-                search_filter = or_(
-                    Product.product_name.ilike(f"%{query}%"),
-                    Product.description.ilike(f"%{query}%"),
-                    Product.blurb.ilike(f"%{query}%"),
-                    Product.product_type.ilike(f"%{query}%")
-                )
-                products_query = products_query.filter(search_filter)
+                # Split query into individual words for flexible matching
+                keywords = query.split()
+                
+                # Build OR conditions for each keyword across all searchable fields
+                search_conditions = []
+                for keyword in keywords:
+                    search_conditions.append(Product.product_name.ilike(f"%{keyword}%"))
+                    search_conditions.append(Product.description.ilike(f"%{keyword}%"))
+                    search_conditions.append(Product.blurb.ilike(f"%{keyword}%"))
+                    search_conditions.append(Product.product_type.ilike(f"%{keyword}%"))
+                
+                # Apply OR filter
+                products_query = products_query.filter(or_(*search_conditions))
             
             # Filter by category
             if category:
@@ -133,6 +147,32 @@ class ChatService:
             db.close()
     
     @classmethod
+    def extract_search_keywords(cls, message: str) -> str:
+        """
+        Extract meaningful search keywords from user message
+        Remove common filler words to improve search accuracy
+        
+        Args:
+            message: User's raw message
+            
+        Returns:
+            Cleaned search keywords
+        """
+        # Common words to remove
+        stopwords = [
+            "show", "me", "find", "looking", "for", "search", "need", "want", 
+            "to", "buy", "get", "some", "the", "a", "an", "can", "you", 
+            "i", "am", "is", "are", "was", "were", "do", "does"
+        ]
+        
+        # Split and filter
+        words = message.lower().split()
+        keywords = [w for w in words if w not in stopwords and len(w) > 2]
+        
+        # Join back
+        return " ".join(keywords) if keywords else message
+    
+    @classmethod
     def detect_intent(cls, message: str) -> Dict[str, any]:
         """
         Detect user intent from message
@@ -146,11 +186,26 @@ class ChatService:
         """
         message_lower = message.lower()
         
-        # Product search intent
-        product_keywords = ["looking for", "find", "search", "show me", "need", "want to buy"]
-        if any(kw in message_lower for kw in product_keywords):
+        # Product search intent - expanded keywords
+        product_keywords = [
+            "looking for", "find", "search", "show me", "need", "want to buy",
+            "get", "buy", "purchase", "interested in"
+        ]
+        
+        # Supplement-specific product keywords (strong indicators)
+        supplement_keywords = [
+            "protein", "vitamin", "collagen", "omega", "probiotic", "bcaa",
+            "creatine", "multivitamin", "supplement", "capsule", "powder",
+            "fish oil", "biotin", "elderberry", "zinc", "magnesium"
+        ]
+        
+        # Check for product search intent
+        has_product_keyword = any(kw in message_lower for kw in product_keywords)
+        has_supplement_keyword = any(kw in message_lower for kw in supplement_keywords)
+        
+        if has_product_keyword or has_supplement_keyword:
             # Extract category
-            categories = ["tops", "bottoms", "shoes", "accessories", "dress", "shirt", "pants"]
+            categories = ["vitamin", "protein", "weight", "beauty", "skin", "digestive", "brain", "focus", "immune", "fitness", "mineral"]
             detected_category = next((cat for cat in categories if cat in message_lower), None)
             
             return {
@@ -221,21 +276,16 @@ class ChatService:
         
         if intent == "product_search":
             # Search for products based on user query
-            search_query = last_message["content"]
+            # Extract meaningful keywords from user message
+            search_keywords = cls.extract_search_keywords(last_message["content"])
             category = intent_data.get("category")
             
-            # If category detected, prioritize category search
-            # Otherwise search by full query
-            if category:
-                products = cls.search_products(
-                    query=category,
-                    limit=5
-                )
-            else:
-                products = cls.search_products(
-                    query=search_query,
-                    limit=5
-                )
+            # Search by extracted keywords for better accuracy
+            products = cls.search_products(
+                query=search_keywords,
+                category=category,
+                limit=5
+            )
             
             if products:
                 product_context = f"\n\nAvailable products matching the query:\n"
@@ -248,6 +298,7 @@ class ChatService:
                         product_context += f"   Description: {p['description']}\n"
                     product_context += f"   Stock: {p['stock']} available\n"
                 product_context += "\n**IMPORTANT**: Only mention the EXACT product information provided above. DO NOT make up or invent descriptions, features, or details that are not listed. If no description is given, just mention the product name, price, and availability."
+                product_context += "\n\n**REQUIRED FDA DISCLAIMER**: You MUST include this exact disclaimer in your response: 'These statements have not been evaluated by the FDA. This product is not intended to diagnose, treat, cure, or prevent any disease.'"
         
         elif intent == "recommendations":
             # Get featured products
@@ -263,6 +314,7 @@ class ChatService:
                         product_context += f"   Description: {p['description']}\n"
                     product_context += f"   Stock: {p['stock']} available\n"
                 product_context += "\n**IMPORTANT**: Only recommend the EXACT products listed above. DO NOT make up product names or details."
+                product_context += "\n\n**REQUIRED FDA DISCLAIMER**: You MUST include this exact disclaimer in your response: 'These statements have not been evaluated by the FDA. This product is not intended to diagnose, treat, cure, or prevent any disease.'"
         
         # Build enhanced prompt with product context
         enhanced_system = SYSTEM_PROMPT
